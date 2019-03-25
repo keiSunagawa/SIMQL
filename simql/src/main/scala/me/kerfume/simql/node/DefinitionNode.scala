@@ -19,5 +19,10 @@ object DefinitionNode {
   case class MacroFuncBody(body: Seq[MacroStatement]) // last statement required quasiquote
 
   sealed trait Definition extends DefinitionNode
-  case class MacroFunc(symbol: String, param: Seq[MacroParam], body: MacroFuncBody, retType: MacroReturnType) extends Definition
+  case class MacroFunc(
+    symbol: String,
+    param: Seq[MacroParam],
+    body: MacroFuncBody,
+    retType: MacroReturnType)
+      extends Definition
 }

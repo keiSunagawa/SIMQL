@@ -1,49 +1,30 @@
-package me.kerfume.simql.transpiler.parser
+package me.kerfume.simql.parser
 
 import scala.util.parsing.combinator.JavaTokenParsers
-import me.kerfume.simql.node.SimqlNode._
+import me.kerfume.simql.node.QueryNode._
 
-trait CoreParser { self: JavaTokenParsers =>
-    def string: Parser[StringWrapper] = stringLiteral ^^ { s =>
-    val value = s.replaceAll("\"", "")
-    StringWrapper(value)
-  }
-  def number: Parser[NumberWrapper] = decimalNumber ^^ { s =>
-    NumberWrapper(BigDecimal(s))
-  }
+trait QueryParser { self: JavaTokenParsers with CommonParser =>
+  def stringW: Parser[StringWrapper] = string ^^ { StringWrapper(_) }
+  def numberW: Parser[NumberWrapper] = number ^^ { NumberWrapper(_) }
+  def symbolW: Parser[SymbolWrapper] = symbol ^^ { SymbolWrapper(_) }
   def nullLit: Parser[NullLit.type] = "null" ^^ { _ =>
     NullLit
   }
 
-  def symbol: Parser[SymbolWrapper] = """[a-zA-Z][a-zA-Z0-9_]*""".r ^^ { SymbolWrapper(_) }
-}
-object Parser extends JavaTokenParsers with CoreParser with DefinitionParser {
-  def parseSimql(code: String): Option[SimqlRoot] = parse(simql, code) match {
-    case Success(root, a) if (a.atEnd) => Some(root)
-    // TODO dump error detail
-    case Success(root, r) =>
-      println(s"parsed: $root")
-      println(s"parse failed. reason: ${r.first}")
-      None
-    case e =>
-      println(s"parse failed. reason: $e")
-      None
-  }
-
-  def raw: Parser[Raw] = """\$`.*`""".r ~ opt("("~>rep(term)<~")") ^^ {
-    case s~as =>
+  def raw: Parser[Raw] = """\$`.*`""".r ~ opt("(" ~> rep(term) <~ ")") ^^ {
+    case s ~ as =>
       val args = as.toList.flatten
       val sql = s.tail.replaceAll("`", "")
       Raw(sql, args)
   }
   def accessor: Parser[Accessor] = """\$[0-9]""".r ^^ { case s => Accessor(s.tail.toInt) }
-  def symbolWithAccessor: Parser[SymbolWithAccessor] = opt(accessor ~ ".") ~ symbol ^^ {
+  def symbolWithAccessor: Parser[SymbolWithAccessor] = opt(accessor ~ ".") ~ symbolW ^^ {
     case acOpt ~ s =>
       val accessor = acOpt.map { case ac ~ _ => ac }
       SymbolWithAccessor(s, accessor)
   }
   def highSymbol: Parser[HighSymbol] = macroApply | raw | symbolWithAccessor
-  def term: Parser[Term] = nullLit | highSymbol | string | number
+  def term: Parser[Term] = nullLit | highSymbol | stringW | numberW
 
   def binaryOp: Parser[BinaryOp] = """(>=|<=|>|<|==|!=|in)""".r ^^ {
     case opStr =>
@@ -83,7 +64,7 @@ object Parser extends JavaTokenParsers with CoreParser with DefinitionParser {
       }
       JoinType(jt)
   }
-  def join = joinType ~ symbol ~ "?" ~ expr ^^ {
+  def join = joinType ~ symbolW ~ "?" ~ expr ^^ {
     case jt ~ rightTable ~ _ ~ exp =>
       Join(jt, rightTable, exp)
   }
@@ -97,7 +78,7 @@ object Parser extends JavaTokenParsers with CoreParser with DefinitionParser {
       OrderType(op)
   }
 
-  def from = symbol ~ rep(join) ^^ {
+  def from = symbolW ~ rep(join) ^^ {
     case table ~ joins =>
       From(table, joins)
   }
@@ -109,7 +90,7 @@ object Parser extends JavaTokenParsers with CoreParser with DefinitionParser {
     case _ ~ exp =>
       Where(exp)
   }
-  def limitOffset = "@" ~ number ~ opt("-" ~ number) ^^ {
+  def limitOffset = "@" ~ numberW ~ opt("-" ~ numberW) ^^ {
     case _ ~ limit ~ offsetSyntax =>
       val offset = offsetSyntax.map { case _ ~ ofs => ofs }
       LimitOffset(limit, offset)
@@ -121,10 +102,10 @@ object Parser extends JavaTokenParsers with CoreParser with DefinitionParser {
 
   def simql = from ~ opt(select) ~ opt(where) ~ opt(limitOffset) ~ opt(order) ^^ {
     case f ~ s ~ w ~ l ~ o =>
-      SimqlRoot(f, s, w, l, o)
+      Query(f, s, w, l, o)
   }
 
-  def macroArg: Parser[MacroArg] = expr | symbolWithAccessor | string | number
+  def macroArg: Parser[MacroArg] = expr | symbolWithAccessor | stringW | numberW
   def macroApply: Parser[MacroApply] =
     """\$[a-zA-Z][a-zA-Z0-9_]*\(""".r ~ opt(macroArg) ~ rep("," ~ macroArg) ~ ")" ^^ {
       case s ~ a1 ~ an ~ _ =>

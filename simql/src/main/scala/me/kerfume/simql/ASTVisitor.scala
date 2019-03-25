@@ -1,9 +1,9 @@
-package me.kerfume.simql.transpiler
+package me.kerfume.simql
 
-import me.kerfume.simql.node.SimqlNode._
-import me.kerfume.simql.functions._
-import cats.instances.list._
 import cats.instances.either._
+import cats.instances.list._
+import me.kerfume.simql.functions._
+import me.kerfume.simql.node.QueryNode._
 
 trait ASTVisitor {
   import ASTVisitor._
@@ -173,7 +173,7 @@ trait ASTVisitor {
       )
   }
 
-  def visit(node: SimqlRoot): RE[SimqlRoot] = {
+  def visit(node: Query): RE[Query] = {
     for {
       from <- visitFrom(node.from)
       select <- re { env =>
@@ -202,7 +202,7 @@ trait ASTVisitor {
 object ASTVisitor {
   import cats.data.Kleisli
   // Reader Either
-  type RE[A] = Kleisli[({ type F[B] = Either[TranspileError, B] })#F, ASTMetaData, A]
-  def re[A](f: ASTMetaData => Either[TranspileError, A]): RE[A] =
-    Kleisli[({ type F[B] = Either[TranspileError, B] })#F, ASTMetaData, A](f)
+  type RE[A] = Kleisli[Result, ASTMetaData, A]
+  def re[A](f: ASTMetaData => Result[A]): RE[A] =
+    Kleisli[Result, ASTMetaData, A](f)
 }

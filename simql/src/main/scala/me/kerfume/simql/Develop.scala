@@ -1,17 +1,18 @@
 package me.kerfume.simql
 
-import me.kerfume.simql.transpiler.Module._
-import me.kerfume.simql.transpiler.parser.Parser
+import Module._
+import me.kerfume.simql.parser.Parser
 
 object Develop {
   def run(query: String): Either[String, String] = simqlToMysql(query)
 }
 
 object MacroTest {
-  import  me.kerfume.simql.transpiler.querymacro.MacroFuncGenerator
+
+  import me.kerfume.simql.smacro.func.MacroFuncGenerator
 
   def run(qq: String, sym: String) = {
-    import me.kerfume.simql.node.SimqlNode._
+    import me.kerfume.simql.node.QueryNode._
 
     val in = s"""defun f(a: Symbol) => Symbol = {
                 |  ${qq}

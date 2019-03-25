@@ -1,22 +1,23 @@
-package me.kerfume.simql.transpiler
+package me.kerfume.simql
 
-import me.kerfume.simql.node.SimqlNode.SimqlRoot
-import parser._
-import resolver._
+import me.kerfume.simql.node.QueryNode.Query
+import me.kerfume.simql.parser.Parser
+import me.kerfume.simql.resolver.{AccessorResolver, MacroFuncResolver, NullResolver, Resolver}
+import me.kerfume.simql.generator.MySQLGenerator
 
 object Module {
-  def simqlToMysql(query: String): Either[TranspileError, MySQLGenerator.Code] = {
+  def simqlToMysql(query: String): Result[MySQLGenerator.Code] = {
     for {
       ast <- parseAndResolve(query)
       mysql = MySQLGenerator.generate(ast)
     } yield mysql
   }
 
-  private[this] def parseAndResolve(query: String): Either[TranspileError, SimqlRoot] = {
+  private[this] def parseAndResolve(query: String): Result[Query] = {
     for {
       ast <- Parser.parseSimql(query).toRight("failed parse.")
       meta = makeMetadata(ast)
-      resolved <- resolvers.foldLeft[Either[TranspileError, SimqlRoot]](Right(ast)) {
+      resolved <- resolvers.foldLeft[Result[Query]](Right(ast)) {
                    case (before, resolver) =>
                      before match {
                        case Right(target) => resolver.resolve(target, meta)
@@ -26,8 +27,8 @@ object Module {
     } yield resolved
   }
 
-  private[this] def makeMetadata(ast: SimqlRoot): ASTMetaData = {
-    import me.kerfume.simql.transpiler.querymacro.buildin._
+  private[this] def makeMetadata(ast: Query): ASTMetaData = {
+    import me.kerfume.simql.smacro.func.buildin._
     val analyzed = Analyzer.analyze(ast)
     analyzed.copy(
       macroFuncs = List(

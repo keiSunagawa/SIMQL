@@ -1,18 +1,18 @@
-package me.kerfume.simql.transpiler.resolver
+package me.kerfume.simql.resolver
 
-import me.kerfume.simql.transpiler._
-import me.kerfume.simql.node.SimqlNode._
+import me.kerfume.simql.node.QueryNode._
 import cats.instances.either._
+import me.kerfume.simql._
 
 object MacroFuncResolver extends Resolver {
-  def resolve(ast: SimqlRoot, meta: ASTMetaData): Either[String, SimqlRoot] = {
+  def resolve(ast: Query, meta: ASTMetaData): Result[Query] = {
     MacroFuncResolverVisitor.visit(ast).run(meta)
   }
 }
 
 object MacroFuncResolverVisitor extends ASTVisitor {
   import ASTVisitor._
-  import me.kerfume.simql.transpiler.querymacro.MacroFunc._
+  import me.kerfume.simql.smacro.func.MacroFunc._
 
   override def visitTerm(node: Term): RE[Term] =
     node match {

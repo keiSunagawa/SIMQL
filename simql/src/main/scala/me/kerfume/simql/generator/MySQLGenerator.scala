@@ -1,16 +1,11 @@
-package me.kerfume.simql.transpiler
+package me.kerfume.simql.generator
 
-import me.kerfume.simql.node.SimqlNode._
-
-trait Generator {
-  type Code
-  def generate(ast: SimqlRoot): Code
-}
+import me.kerfume.simql.node.QueryNode._
 
 object MySQLGenerator extends Generator {
   type Code = String
 
-  def generate(ast: SimqlRoot): Code = syntax.toSQL(ast)
+  def generate(ast: Query): Code = syntax.toSQL(ast)
 
   object syntax {
     def stringToSQL(node: StringWrapper): String = s"'${node.value}'"
@@ -96,7 +91,7 @@ object MySQLGenerator extends Generator {
       s"${pairToSQL(node.orderType, node.head)} $tailSyntax"
     }
     // TODO stack safe or @tailrec
-    def toSQL(node: SimqlRoot): String = {
+    def toSQL(node: Query): String = {
       val selectSQL = node.select.map(selectToSQL).getOrElse("*")
       val whereSQL = node.where.map(w => s"WHERE ${whereToSQL(w)}").getOrElse("")
       val limitOffsetSQL = node.limitOffset.map(l => s"LIMIT ${limitOffsetToSQL(l)}").getOrElse("")

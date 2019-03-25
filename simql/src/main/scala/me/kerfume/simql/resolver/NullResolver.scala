@@ -1,12 +1,11 @@
-package me.kerfume.simql.transpiler.resolver
+package me.kerfume.simql.resolver
 
-import me.kerfume.simql.transpiler._
-import me.kerfume.simql.node.SimqlNode._
+import me.kerfume.simql.node.QueryNode._
 import cats.instances.either._
-import scala.util.{Failure, Success, Try}
+import me.kerfume.simql._
 
 object NullResolver extends Resolver {
-  def resolve(ast: SimqlRoot, meta: ASTMetaData): Either[String, SimqlRoot] = {
+  def resolve(ast: Query, meta: ASTMetaData): Result[Query] = {
     NullResolverVisitor.visit(ast).run(meta)
   }
 }
