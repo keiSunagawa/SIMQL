@@ -28,11 +28,12 @@ object Module {
   }
 
   private[this] def makeMetadata(ast: Query): ASTMetaData = {
-    import me.kerfume.simql.smacro.func.buildin._
+    import me.kerfume.simql.smacro.MacroFunc.buildin._
     val analyzed = Analyzer.analyze(ast)
     analyzed.copy(
       macroFuncs = List(
-        Count
+        Count,
+        Like
       )
     )
   }

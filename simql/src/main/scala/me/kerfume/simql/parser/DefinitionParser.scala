@@ -8,7 +8,7 @@ trait DefinitionParser { self: JavaTokenParsers with CommonParser =>
     case "String" => StringType
     case "Number" => NumberType
     case "Symbol" => SymbolType
-    case "Expr"   => ExprType
+    case "Cond"   => ExprType
   }
   def macroParam: Parser[MacroParam] = symbol ~ ":" ~ macroParamType ^^ {
     case s ~ _ ~ tpe =>

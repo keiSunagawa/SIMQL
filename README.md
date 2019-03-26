@@ -1,4 +1,45 @@
-## SIMQL syntax
+[wip]
+
+## SIMQL
+simql language can transpile for SQL.
+
+### Features
+- apply query snippet by function call.
+- can quickly writed query on short and simple syntax keyword.
+- can pre define functions, by local file.
+
+### MVP
+```
+// you will be able to use "define block" predefined on local file.
+define {
+  defun like(col: Symbol keyword: String) => Cond {
+    let kl = "%" + keyword + "%"
+    q{ $`? LIKE(?)`($col, $kl) }
+  }
+
+  defun c(col: Symbol) => Symbol {
+    q{ $`COUNT(?)`($col) }
+  }
+
+  defun isActive() => Cond {
+    q{ status == "enable" && ($1.title != null || $1.content != null) }
+  }
+}
+
+users << tasks ?> id == $1.assign_user_id :> $c(id) ?> $isActive() && $like(name, "K")
+
+↓↓↓↓ transepile to ↓↓↓↓
+
+SELECT COUNT(id)
+FROM users
+LET JOIN tasks ON users.id = tasks.assign_user_id
+WHERE (
+  users.status = "enable"
+    AND (tasks.title IS NOT NULL OR tasks.content IS NOT NULL)
+  ) AND name LIKE("%K%")
+```
+
+### syntax
 ```
 string ::= // string
 number ::= // decimal number
@@ -47,12 +88,4 @@ macroFunc = "defun" symbol (" { macroParam } ")" "=>" macroReturnType "=" "{" ma
 
 definition ::= macroFunc // ひとまずmacroFuncのみ
 definitionBlock ::= define "{" {definition} "}"
-```
-
-## SIMQL macro function example
-```
-defun safeLowerLimit(col: Symbol, min: Number) => Cond = {
-  // TODO can use expressions
-  q{ $col >= min && $col != null }
-}
 ```

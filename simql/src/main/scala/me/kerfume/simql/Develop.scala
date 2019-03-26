@@ -9,17 +9,17 @@ object Develop {
 
 object MacroTest {
 
-  import me.kerfume.simql.smacro.func.MacroFuncGenerator
+  import me.kerfume.simql.smacro.func.Generator
 
-  def run(qq: String, sym: String) = {
+  def run(argsS: String, qq: String, sym: String) = {
     import me.kerfume.simql.node.QueryNode._
 
-    val in = s"""defun f(a: Symbol) => Symbol = {
+    val in = s"""defun f($argsS) => Cond {
                 |  ${qq}
                 |}
               """.stripMargin
     val ast = Parser.parse(Parser.macroFunc, in).get
     val args = Seq(SymbolWithAccessor(SymbolWrapper(sym), None))
-    MacroFuncGenerator.generate(ast).right.get.apply(args)
+    Generator.generate(ast).right.get.apply(args)
   }
 }

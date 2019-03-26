@@ -1,7 +1,6 @@
 package me.kerfume.simql.resolver
 
 import me.kerfume.simql.node.QueryNode._
-import cats.instances.either._
 import me.kerfume.simql._
 
 object MacroFuncResolver extends Resolver {
@@ -12,7 +11,7 @@ object MacroFuncResolver extends Resolver {
 
 object MacroFuncResolverVisitor extends ASTVisitor {
   import ASTVisitor._
-  import me.kerfume.simql.smacro.func.MacroFunc._
+  import me.kerfume.simql.smacro.MacroFunc._
 
   override def visitTerm(node: Term): RE[Term] =
     node match {

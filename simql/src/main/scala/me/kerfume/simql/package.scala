@@ -1,7 +1,7 @@
 package me.kerfume
 
 import me.kerfume.simql.node.QueryNode.SymbolWrapper
-import me.kerfume.simql.smacro.func.MacroFunc
+import me.kerfume.simql.smacro.MacroFunc
 
 package object simql {
   type SimqlError = String
