@@ -34,12 +34,24 @@ object MySQLGenerator extends Generator {
       case NullLit          => nullToSQL()
       case n: SymbolWrapper => symbolToSQL(n)
       case n: HighSymbol    => highSymbolToSQL(n)
+      case RBracket(c) => s"(${condToSQL(c)})"
     }
-    def binaryOpToSQL(node: BinaryOp): String = node.op.label
-    def logicalOpToSQL(node: LogicalOp): String = node.op match {
+    def cond0ToSQL(node: Cond0): String = node match {
+      case n: Term => termToSQL(n)
+      case BCond0(lhs, Op0(BinaryOp.EQ), NullLit) => s"(${cond0ToSQL(lhs)}) IS NULL" // isNull pattern
+      case BCond0(lhs, Op0(BinaryOp.NE), NullLit) => s"(${cond0ToSQL(lhs)}) IS NOT NULL" // isNotNull pattern
+      case BCond0(lhs, op, rhs) => s"(${cond0ToSQL(lhs)}) ${op0ToSQL(op)} (${cond0ToSQL(rhs)})"
+    }
+    def condToSQL(node: Cond): String = node match {
+      case n: Cond0 => cond0ToSQL(n)
+      case BCond(lhs, op, rhs) => s"(${condToSQL(lhs)}) ${op1ToSQL(op)} (${condToSQL(rhs)})"
+    }
+    def op0ToSQL(node: Op0): String = node.op.label
+    def op1ToSQL(node: Op1): String = node.op match {
       case LogicalOp.And => "AND"
       case LogicalOp.Or  => "OR"
     }
+
     def joinTypeToSQL(node: JoinType): String = node.value match {
       case JoinType.LeftJoin  => "LEFT JOIN"
       case JoinType.InnerJoin => "INNER JOIN"
@@ -48,25 +60,9 @@ object MySQLGenerator extends Generator {
       case OrderType.ASC  => "ASC"
       case OrderType.DESC => "DESC"
     }
-    def condToSQL(node: Cond): String = node match {
-      case BinaryCond(op, lhs, rhs) =>
-        s"${highSymbolToSQL(lhs)} ${binaryOpToSQL(op)} ${termToSQL(rhs)}"
-      case IsNull(lhs) =>
-        s"${highSymbolToSQL(lhs)} IS NULL"
-      case IsNotNull(lhs) =>
-        s"${highSymbolToSQL(lhs)} IS NOT NULL"
-      case n: MacroApply =>
-        throw new RuntimeException(s"found unresolved macro. value: $n")
-      case n: Raw => rawToSQL(n)
-    }
-    def exprRhsToSQL(node: ExprRhs): String = {
-      s"${logicalOpToSQL(node.op)} ${condToSQL(node.value)}"
-    }
-    def exprToSQL(node: Expr): String = {
-      s"${condToSQL(node.lhs)} ${node.rhss.map(exprRhsToSQL).mkString(" ")}"
-    }
+
     def joinToSQL(node: Join): String = {
-      s"${joinTypeToSQL(node.joinType)} ${symbolToSQL(node.rhsTable)} ON ${exprToSQL(node.on)}"
+      s"${joinTypeToSQL(node.joinType)} ${symbolToSQL(node.rhsTable)} ON ${condToSQL(node.on)}"
     }
     def fromToSQL(node: From): String = {
       s"${symbolToSQL(node.lhs)} ${node.rhss.map(joinToSQL).mkString(" ")}"
@@ -75,7 +71,7 @@ object MySQLGenerator extends Generator {
       if (node.values.isEmpty) "*" else node.values.map(s => highSymbolToSQL(s)).mkString(", ")
     }
     def whereToSQL(node: Where): String = {
-      exprToSQL(node.value)
+      condToSQL(node.value)
     }
     def limitOffsetToSQL(node: LimitOffset): String = {
       val offsetSQL = node.offset.map(o => s"${numberToSQL(o)}, ").getOrElse("")

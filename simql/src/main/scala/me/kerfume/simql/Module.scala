@@ -2,7 +2,7 @@ package me.kerfume.simql
 
 import me.kerfume.simql.node.QueryNode.Query
 import me.kerfume.simql.parser.Parser
-import me.kerfume.simql.resolver.{AccessorResolver, MacroFuncResolver, NullResolver, Resolver}
+import me.kerfume.simql.resolver._
 import me.kerfume.simql.generator.MySQLGenerator
 
 object Module {
@@ -40,6 +40,5 @@ object Module {
   private[this] val resolvers: Seq[Resolver] = Seq(
     MacroFuncResolver,
     AccessorResolver,
-    NullResolver
   )
 }

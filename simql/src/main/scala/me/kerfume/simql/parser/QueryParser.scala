@@ -24,9 +24,10 @@ trait QueryParser { self: JavaTokenParsers with CommonParser =>
       SymbolWithAccessor(s, accessor)
   }
   def highSymbol: Parser[HighSymbol] = macroApply | raw | symbolWithAccessor
-  def term: Parser[Term] = nullLit | highSymbol | stringW | numberW
+  def term: Parser[Term] = nullLit | highSymbol | stringW | numberW | rbracket
+  def rbracket: Parser[RBracket] = "("~>cond<~")" ^^ { RBracket(_) }
 
-  def binaryOp: Parser[BinaryOp] = """(>=|<=|>|<|==|!=|in)""".r ^^ {
+  def op0: Parser[Op0] = """(>=|<=|>|<|==|!=)""".r ^^ {
     case opStr =>
       val op = opStr match {
         case ">"  => BinaryOp.GT
@@ -36,24 +37,40 @@ trait QueryParser { self: JavaTokenParsers with CommonParser =>
         case "==" => BinaryOp.EQ
         case "!=" => BinaryOp.NE
       }
-      BinaryOp(op)
+      Op0(op)
   }
-  def binaryCond = highSymbol ~ binaryOp ~ term ^^ { case lhs ~ op ~ rhs => BinaryCond(op, lhs, rhs) }
-  def cond: Parser[Cond] = binaryCond | macroApply | raw
 
-  def logicalOp = """(&&|\|\|)""".r ^^ {
+  def op1: Parser[Op1] = """(&&|\|\|)""".r ^^ {
     case opStr =>
       val op = opStr match {
         case "&&" => LogicalOp.And
         case "||" => LogicalOp.Or
       }
-      LogicalOp(op)
+      Op1(op)
   }
 
-  def expr: Parser[Expr] = cond ~ rep(logicalOp ~ cond) ^^ {
-    case b ~ body =>
-      val rhss = body.map { case lo ~ bc => ExprRhs(lo, bc) }
-      Expr(b, rhss)
+  def cond0: Parser[Cond0] = term~rep(op0~term) ^^ { case te~rep =>
+    if (rep.nonEmpty) {
+      val h :: t = rep.map { case op~rhs => op -> rhs }
+      val first = BCond0(te, h._1, h._2)
+      t.foldLeft(first) { case (acm, (op, rhs)) =>
+        BCond0(acm, op, rhs)
+      }
+    } else  {
+      te
+    }
+  }
+
+  def cond: Parser[Cond] = cond0~rep(op1~cond0) ^^ { case c0~rep =>
+    if (rep.nonEmpty) {
+      val h :: t = rep.map { case op~rhs => op -> rhs }
+      val first = BCond(c0,  h._1, h._2)
+      t.foldLeft(first) { case (acm, (op, rhs)) =>
+        BCond(acm, op, rhs)
+      }
+    } else {
+       c0
+    }
   }
 
   def joinType = """<<|><""".r ^^ {
@@ -64,9 +81,9 @@ trait QueryParser { self: JavaTokenParsers with CommonParser =>
       }
       JoinType(jt)
   }
-  def join = joinType ~ symbolW ~ "?" ~ expr ^^ {
-    case jt ~ rightTable ~ _ ~ exp =>
-      Join(jt, rightTable, exp)
+  def join = joinType ~ symbolW ~ "?" ~ cond ^^ {
+    case jt ~ rightTable ~ _ ~ c =>
+      Join(jt, rightTable, c)
   }
 
   def orderType = """/>|\\>""".r ^^ {
@@ -86,9 +103,9 @@ trait QueryParser { self: JavaTokenParsers with CommonParser =>
     case _ ~ col1 ~ cols =>
       Select(col1 +: cols)
   }
-  def where = "?" ~ expr ^^ {
-    case _ ~ exp =>
-      Where(exp)
+  def where = "?" ~ cond ^^ {
+    case _ ~ c =>
+      Where(c)
   }
   def limitOffset = "@" ~ numberW ~ opt("-" ~ numberW) ^^ {
     case _ ~ limit ~ offsetSyntax =>
@@ -105,7 +122,7 @@ trait QueryParser { self: JavaTokenParsers with CommonParser =>
       Query(f, s, w, l, o)
   }
 
-  def macroArg: Parser[MacroArg] = expr | symbolWithAccessor | stringW | numberW
+  def macroArg: Parser[MacroArg] = cond | symbolWithAccessor | stringW | numberW
   def macroApply: Parser[MacroApply] =
     """\$[a-zA-Z][a-zA-Z0-9_]*\(""".r ~ opt(macroArg) ~ rep("," ~ macroArg) ~ ")" ^^ {
       case s ~ a1 ~ an ~ _ =>

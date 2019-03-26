@@ -36,6 +36,7 @@ trait ASTVisitor {
   }
 
   def visitTerm(node: Term): RE[Term] = node match {
+    case RBracket(c) => visitCond(c).map(RBracket)
     case n: StringWrapper => visitString(n).map(identity)
     case n: NumberWrapper => visitNumber(n).map(identity)
     case n: SymbolWrapper => visitSymbol(n).map(identity)
@@ -46,67 +47,27 @@ trait ASTVisitor {
       }
   }
 
-  def visitBinaryCond(node: BinaryCond): RE[BinaryCond] = {
-    for {
-      lhs <- visitHighSymbol(node.lhs)
-      rhs <- visitTerm(node.rhs)
-    } yield
-      node.copy(
-        lhs = lhs,
-        rhs = rhs
-      )
+  def visitCond0(node: Cond0): RE[Cond0] = node match {
+    case n: Term => visitTerm(n).map(identity)
+    case BCond0(lhs, op, rhs) =>
+      for {
+        resLhs <- visitCond0(lhs)
+        resRhs <- visitCond0(rhs)
+      } yield BCond0(resLhs, op, resRhs)
   }
-  def visitIsNull(node: IsNull): RE[IsNull] = {
-    for {
-      lhs <- visitHighSymbol(node.lhs)
-    } yield
-      node.copy(
-        lhs = lhs
-      )
-  }
-  def visitIsNotNull(node: IsNotNull): RE[IsNotNull] = {
-    for {
-      lhs <- visitHighSymbol(node.lhs)
-    } yield
-      node.copy(
-        lhs = lhs
-      )
-  }
-
   def visitCond(node: Cond): RE[Cond] = node match {
-    case n: BinaryCond => visitBinaryCond(n).map(identity)
-    case n: IsNull     => visitIsNull(n).map(identity)
-    case n: IsNotNull  => visitIsNotNull(n).map(identity)
-    case n: Raw        => visitRaw(n).map(identity)
-    case n: MacroApply => ??? // TODO
-  }
-
-  def visitExprRhs(node: ExprRhs): RE[ExprRhs] = {
-    for {
-      value <- visitCond(node.value)
-    } yield
-      node.copy(
-        value = value
-      )
-  }
-
-  def visitExpr(node: Expr): RE[Expr] = {
-    for {
-      lhs <- visitCond(node.lhs)
-      rhss <- re { env =>
-               node.rhss.mapE(n => visitExprRhs(n).run(env))
-             }
-    } yield
-      node.copy(
-        lhs = lhs,
-        rhss = rhss
-      )
+    case n: Cond0 => visitCond0(n).map(identity)
+    case BCond(lhs, op, rhs) =>
+      for {
+        resLhs <- visitCond(lhs)
+        resRhs <- visitCond(rhs)
+      } yield BCond(resLhs, op, resRhs)
   }
 
   def visitJoin(node: Join): RE[Join] = {
     for {
       rhsTable <- visitSymbol(node.rhsTable)
-      on <- visitExpr(node.on)
+      on <- visitCond(node.on)
     } yield
       node.copy(
         rhsTable = rhsTable,
@@ -140,7 +101,7 @@ trait ASTVisitor {
 
   def visitWhere(node: Where): RE[Where] = {
     for {
-      value <- visitExpr(node.value)
+      value <- visitCond(node.value)
     } yield
       node.copy(
         value = value

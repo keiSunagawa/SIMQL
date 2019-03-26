@@ -12,15 +12,14 @@ macroApply ::= "\$[a-zA-Z][a-zA-Z0-9_]*"(" [macroArg] {"," macroArg} ")"
 symbolWithAccessor ::= [accessor"."]symbol
 tableSymbol ::= macroApply | raw | symbol
 highSymbol ::= macroApply | raw | symbolWithAccessor
-term ::= (null | highSymbol | string | number)
+term ::= null | highSymbol | string | number | rbracket
+rbracket ::= "(" cond ")"
 
-binaryOp ::= (">" | "<" | ">=" | "<=" | "==" | "!=")
-binaryCond ::= highSymbol binaryOp term
-cond ::= binaryCond | macroApply | cond
+op0 ::= ">" | "<" | ">=" | "<=" | "==" | "!="
+op1 ::= "&&" | "||"
 
-logicalOp ::= "&&" | "||"
-
-expr ::= cond {logicalOp cond}
+cond0 ::= term {op0 term}
+cond ::= cond0 {op1 cond0}
 
 joinType ::= "<<" | "><"
 join ::= joinType TableSymbokl "?" expr

@@ -4,13 +4,12 @@ import me.kerfume.simql.node.DefinitionNode._
 import me.kerfume.simql.node.DefinitionNode.{MacroFunc => FNode}
 import me.kerfume.simql.node.QueryNode._
 import me.kerfume.simql.parser.Parser
-import me.kerfume.simql.smacro.func
 import me.kerfume.simql.{ASTMetaData, ASTVisitor, Result}
 import me.kerfume.simql.functions._
 import cats.instances.list._
 
 object MacroFuncGenerator {
-  def generate(ast: FNode): Result[func.MacroFunc] = {
+  def generate(ast: FNode): Result[MacroFunc] = {
     val key = ast.symbol
     val params = ast.param
 
@@ -22,7 +21,7 @@ object MacroFuncGenerator {
           val retQuery = Parser.parse(Parser.highSymbol, ret).get // TODO safety
           generateHighSymbolMacro(key, params, retQuery)
         case RetCond =>
-          Parser.parse(Parser.binaryCond, ret)
+          Parser.parse(Parser.cond, ret)
           ???
       }
     }
