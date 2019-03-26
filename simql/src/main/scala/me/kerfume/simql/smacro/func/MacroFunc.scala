@@ -17,6 +17,10 @@ abstract class HighSymbolMacro extends MacroFunc {
   type ReturnType = HighSymbol
 }
 
+abstract class TermMacro extends MacroFunc {
+  type ReturnType = Term
+}
+
 abstract class CondMacro extends MacroFunc {
   type ReturnType = Cond
 }
@@ -43,6 +47,11 @@ object MacroFunc {
     def highSymbolMacros: Map[String, HighSymbolMacro] =
       fs.collect {
         case m: HighSymbolMacro =>
+          m.key -> m
+      }(collection.breakOut)
+    def termMacros: Map[String, TermMacro] =
+      fs.collect {
+        case m: TermMacro =>
           m.key -> m
       }(collection.breakOut)
     def condMacros: Map[String, CondMacro] =

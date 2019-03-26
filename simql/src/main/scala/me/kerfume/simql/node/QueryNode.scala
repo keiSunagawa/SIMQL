@@ -17,7 +17,7 @@ object QueryNode {
   sealed trait TableSymbol extends QueryNode
   case class SymbolWrapper(label: String) extends Term with TableSymbol
   case class Raw(sql: String, args: List[Term]) extends Term with HighSymbol with TableSymbol with Cond
-  case class MacroApply(symbol: String, args: Seq[MacroArg]) extends HighSymbol with TableSymbol with Cond
+  case class MacroApply(symbol: String, args: Seq[MacroArg]) extends HighSymbol with TableSymbol
   case class Accessor(point: Int, resolvedSymbol: Option[SymbolWrapper] = None)
   case class SymbolWithAccessor(symbol: SymbolWrapper, accessor: Option[Accessor]) extends HighSymbol with MacroArg
 

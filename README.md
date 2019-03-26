@@ -39,7 +39,7 @@ groupBy ::= // TODO maybe omit
 // define
 macroParamType ::= "String" | "Number" | "Symbol" | "Cond"
 macroParam ::= symbol ":" macroParamType
-macroReturnType ::= "Cond" | "Symbol"
+macroReturnType ::= "Cond" | "Symbol" | "Term"
 quasiquote ::= "q{"*"}"
 macroStatement ::= quasiquote // or TODO
 macroFuncBody ::= {macroStatement}

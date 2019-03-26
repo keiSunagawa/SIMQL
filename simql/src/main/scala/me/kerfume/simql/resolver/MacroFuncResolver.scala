@@ -16,12 +16,12 @@ object MacroFuncResolverVisitor extends ASTVisitor {
 
   override def visitTerm(node: Term): RE[Term] =
     node match {
-      case n: HighSymbol =>
-        n match {
-          case n: MacroApply =>
-            // TODO implements Term macro
-            resolve0().map(identity)
-          case _ => super.visitHighSymbol(n).map(identity)
+      case MacroApply(key, args) =>
+        re { meta =>
+          meta.macroFuncs.termMacros.get(key) match {
+            case Some(f) => f.apply(args)
+            case None    => super.visitTerm(node).run(meta) // 末端で確実にLeftを返せるならよいが少々危険か…?
+          }
         }
       case _ => super.visitTerm(node)
     }
@@ -43,15 +43,11 @@ object MacroFuncResolverVisitor extends ASTVisitor {
         for {
           resolved <- meta.macroFuncs.condMacros.get(key) match {
                        case Some(f) => f.apply(args)
-                       case None    => Left(s"not define macro. symbol: $key")
+                       case None    => super.visitCond(node).run(meta)
                      }
           visited <- super.visitCond(resolved).run(meta)
         } yield visited
       }
     case _ => super.visitCond(node)
-  }
-
-  def resolve0(): RE[HighSymbol] = re { _ =>
-    Right(Raw("UN IMPLEMENTS", Nil))
   }
 }
