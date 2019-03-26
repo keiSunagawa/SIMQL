@@ -39,6 +39,6 @@ object Module {
 
   private[this] val resolvers: Seq[Resolver] = Seq(
     MacroFuncResolver,
-    AccessorResolver,
+    AccessorResolver
   )
 }

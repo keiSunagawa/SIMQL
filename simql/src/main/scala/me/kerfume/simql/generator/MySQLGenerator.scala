@@ -34,16 +34,16 @@ object MySQLGenerator extends Generator {
       case NullLit          => nullToSQL()
       case n: SymbolWrapper => symbolToSQL(n)
       case n: HighSymbol    => highSymbolToSQL(n)
-      case RBracket(c) => s"(${condToSQL(c)})"
+      case RBracket(c)      => s"(${condToSQL(c)})"
     }
     def cond0ToSQL(node: Cond0): String = node match {
-      case n: Term => termToSQL(n)
+      case n: Term                                => termToSQL(n)
       case BCond0(lhs, Op0(BinaryOp.EQ), NullLit) => s"(${cond0ToSQL(lhs)}) IS NULL" // isNull pattern
       case BCond0(lhs, Op0(BinaryOp.NE), NullLit) => s"(${cond0ToSQL(lhs)}) IS NOT NULL" // isNotNull pattern
-      case BCond0(lhs, op, rhs) => s"(${cond0ToSQL(lhs)}) ${op0ToSQL(op)} (${cond0ToSQL(rhs)})"
+      case BCond0(lhs, op, rhs)                   => s"(${cond0ToSQL(lhs)}) ${op0ToSQL(op)} (${cond0ToSQL(rhs)})"
     }
     def condToSQL(node: Cond): String = node match {
-      case n: Cond0 => cond0ToSQL(n)
+      case n: Cond0            => cond0ToSQL(n)
       case BCond(lhs, op, rhs) => s"(${condToSQL(lhs)}) ${op1ToSQL(op)} (${condToSQL(rhs)})"
     }
     def op0ToSQL(node: Op0): String = node.op.label

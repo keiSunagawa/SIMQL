@@ -36,7 +36,7 @@ trait ASTVisitor {
   }
 
   def visitTerm(node: Term): RE[Term] = node match {
-    case RBracket(c) => visitCond(c).map(RBracket)
+    case RBracket(c)      => visitCond(c).map(RBracket)
     case n: StringWrapper => visitString(n).map(identity)
     case n: NumberWrapper => visitNumber(n).map(identity)
     case n: SymbolWrapper => visitSymbol(n).map(identity)

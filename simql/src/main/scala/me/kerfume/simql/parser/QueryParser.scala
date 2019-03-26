@@ -25,7 +25,7 @@ trait QueryParser { self: JavaTokenParsers with CommonParser =>
   }
   def highSymbol: Parser[HighSymbol] = macroApply | raw | symbolWithAccessor
   def term: Parser[Term] = nullLit | highSymbol | stringW | numberW | rbracket
-  def rbracket: Parser[RBracket] = "("~>cond<~")" ^^ { RBracket(_) }
+  def rbracket: Parser[RBracket] = "(" ~> cond <~ ")" ^^ { RBracket(_) }
 
   def op0: Parser[Op0] = """(>=|<=|>|<|==|!=)""".r ^^ {
     case opStr =>
@@ -49,28 +49,32 @@ trait QueryParser { self: JavaTokenParsers with CommonParser =>
       Op1(op)
   }
 
-  def cond0: Parser[Cond0] = term~rep(op0~term) ^^ { case te~rep =>
-    if (rep.nonEmpty) {
-      val h :: t = rep.map { case op~rhs => op -> rhs }
-      val first = BCond0(te, h._1, h._2)
-      t.foldLeft(first) { case (acm, (op, rhs)) =>
-        BCond0(acm, op, rhs)
+  def cond0: Parser[Cond0] = term ~ rep(op0 ~ term) ^^ {
+    case te ~ rep =>
+      if (rep.nonEmpty) {
+        val h :: t = rep.map { case op ~ rhs => op -> rhs }
+        val first = BCond0(te, h._1, h._2)
+        t.foldLeft(first) {
+          case (acm, (op, rhs)) =>
+            BCond0(acm, op, rhs)
+        }
+      } else {
+        te
       }
-    } else  {
-      te
-    }
   }
 
-  def cond: Parser[Cond] = cond0~rep(op1~cond0) ^^ { case c0~rep =>
-    if (rep.nonEmpty) {
-      val h :: t = rep.map { case op~rhs => op -> rhs }
-      val first = BCond(c0,  h._1, h._2)
-      t.foldLeft(first) { case (acm, (op, rhs)) =>
-        BCond(acm, op, rhs)
+  def cond: Parser[Cond] = cond0 ~ rep(op1 ~ cond0) ^^ {
+    case c0 ~ rep =>
+      if (rep.nonEmpty) {
+        val h :: t = rep.map { case op ~ rhs => op -> rhs }
+        val first = BCond(c0, h._1, h._2)
+        t.foldLeft(first) {
+          case (acm, (op, rhs)) =>
+            BCond(acm, op, rhs)
+        }
+      } else {
+        c0
       }
-    } else {
-       c0
-    }
   }
 
   def joinType = """<<|><""".r ^^ {
@@ -81,7 +85,7 @@ trait QueryParser { self: JavaTokenParsers with CommonParser =>
       }
       JoinType(jt)
   }
-  def join = joinType ~ symbolW ~ "?" ~ cond ^^ {
+  def join = joinType ~ symbolW ~ "?>" ~ cond ^^ {
     case jt ~ rightTable ~ _ ~ c =>
       Join(jt, rightTable, c)
   }
@@ -99,11 +103,11 @@ trait QueryParser { self: JavaTokenParsers with CommonParser =>
     case table ~ joins =>
       From(table, joins)
   }
-  def select = ":" ~ highSymbol ~ rep(highSymbol) ^^ {
+  def select = ":>" ~ highSymbol ~ rep(highSymbol) ^^ {
     case _ ~ col1 ~ cols =>
       Select(col1 +: cols)
   }
-  def where = "?" ~ cond ^^ {
+  def where = "?>" ~ cond ^^ {
     case _ ~ c =>
       Where(c)
   }

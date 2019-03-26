@@ -3,7 +3,8 @@ package me.kerfume.simql.node
 sealed trait QueryNode
 
 object QueryNode {
-  sealed trait MacroArg { self: QueryNode => }
+  sealed trait MacroArg { self: QueryNode =>
+  }
   sealed trait Cond extends QueryNode with MacroArg
   sealed trait Cond0 extends Cond
 

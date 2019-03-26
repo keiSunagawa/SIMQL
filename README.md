@@ -6,7 +6,7 @@ null ::= "null"
 symbol ::= [a-zA-Z][a-zA-Z0-9_]*
 accessor ::= "$"[0-9]
 raw = "\$`.*`" [ "(" { term } ")" ]
-macroArg ::= expr | symbolWithAccessor | string | number
+macroArg ::= cond | symbolWithAccessor | string | number
 macroApply ::= "\$[a-zA-Z][a-zA-Z0-9_]*"(" [macroArg] {"," macroArg} ")"
 
 symbolWithAccessor ::= [accessor"."]symbol
@@ -22,23 +22,22 @@ cond0 ::= term {op0 term}
 cond ::= cond0 {op1 cond0}
 
 joinType ::= "<<" | "><"
-join ::= joinType TableSymbokl "?" expr
+join ::= joinType TableSymbokl "?>" expr
 
 orderType ::= "/>" | "\>"
 
 from ::= TableSymbol {join}
-select ::= ":" highSymbol {highSymbol}
-where ::= "?" expr
+select ::= ":>" highSymbol {highSymbol}
+where ::= "?>" expr
 limitOffset ::= "@" number [- number] // TODO ignore float number
 order ::= orderType highSymbol {highSymbol}
 
 simql ::= from [select] [where] [limitOffset] [order]
 
-order ::= // TODO
 groupBy ::= // TODO maybe omit
 
 // define
-macroParamType ::= "String" | "Number" | "Symbol" | "Expr"
+macroParamType ::= "String" | "Number" | "Symbol" | "Cond"
 macroParam ::= symbol ":" macroParamType
 macroReturnType ::= "Cond" | "Symbol"
 quasiquote ::= "q{"*"}"

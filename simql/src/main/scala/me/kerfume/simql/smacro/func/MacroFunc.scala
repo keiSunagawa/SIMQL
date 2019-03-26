@@ -56,7 +56,7 @@ object MacroFunc {
 object buildin {
   import me.kerfume.simql.parser.Parser
 
-  val countDefine: String = """defun c(col: Symbol) => Symbol = {
+  val countDefine: String = """defun c(col: Symbol) => Symbol {
                               |  q{ $`COUNT(?)`($col()) }
                               |}""".stripMargin
 
