@@ -37,4 +37,8 @@ trait DefinitionParser { self: JavaTokenParsers with CommonParser =>
       case _ ~ sym ~ _ ~ ps ~ _ ~ _ ~ retType ~ _ ~ body ~ _ =>
         MacroFunc(sym, ps, body, retType)
     }
+
+  def definition: Parser[Definition] = macroFunc
+
+  def definitionBlock: Parser[DefinitionBlock] = "define"~>"{"~>rep(definition)<~"}" ^^ { case defs => DefinitionBlock(defs) }
 }

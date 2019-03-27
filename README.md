@@ -87,5 +87,5 @@ macroFuncBody ::= {macroStatement}
 macroFunc = "defun" symbol (" { macroParam } ")" "=>" macroReturnType "=" "{" macroFuncBody "}"
 
 definition ::= macroFunc // ひとまずmacroFuncのみ
-definitionBlock ::= define "{" {definition} "}"
+definitionBlock ::= "define" "{" {definition} "}"
 ```

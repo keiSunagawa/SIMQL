@@ -25,4 +25,6 @@ object DefinitionNode {
     body: MacroFuncBody,
     retType: MacroReturnType)
       extends Definition
+
+  case class DefinitionBlock(defs: List[Definition]) extends DefinitionNode
 }

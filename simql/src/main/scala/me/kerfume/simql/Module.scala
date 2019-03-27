@@ -1,9 +1,12 @@
 package me.kerfume.simql
 
 import me.kerfume.simql.node.QueryNode.Query
+import me.kerfume.simql.node.DefinitionNode.{ DefinitionBlock, MacroFunc }
 import me.kerfume.simql.parser.Parser
 import me.kerfume.simql.resolver._
 import me.kerfume.simql.generator.MySQLGenerator
+import me.kerfume.simql.functions._
+import cats.instances.list._
 
 object Module {
   def simqlToMysql(query: String): Result[MySQLGenerator.Code] = {
@@ -16,7 +19,7 @@ object Module {
   private[this] def parseAndResolve(query: String): Result[Query] = {
     for {
       ast <- Parser.parseSimql(query).toRight("failed parse.")
-      meta = makeMetadata(ast)
+      meta <- makeMetadata(ast)
       resolved <- resolvers.foldLeft[Result[Query]](Right(ast)) {
                    case (before, resolver) =>
                      before match {
@@ -27,14 +30,15 @@ object Module {
     } yield resolved
   }
 
-  private[this] def makeMetadata(ast: Query): ASTMetaData = {
-    import me.kerfume.simql.smacro.MacroFunc.buildin._
+  private[this] def makeMetadata(ast: Query): Result[ASTMetaData] = {
+    import me.kerfume.simql.smacro.func.{ Generator => MGenerator }
+
     val analyzed = Analyzer.analyze(ast)
-    analyzed.copy(
-      macroFuncs = List(
-        Count,
-        Like
-      )
+    for {
+      predefMacro <- DefinitionModule.loadPredef()
+      macroFuncs <- predefMacro.defs.collect { case c: MacroFunc => c }.mapE(a => MGenerator.generate(a))
+    } yield analyzed.copy(
+      macroFuncs = macroFuncs
     )
   }
 
@@ -42,4 +46,17 @@ object Module {
     MacroFuncResolver,
     AccessorResolver
   )
+}
+
+object DefinitionModule {
+  import scala.io.Source
+
+  def loadPredef(): Result[DefinitionBlock] = {
+    val code = Source.fromFile("predefine.smql", "UTF-8").getLines.mkString("\n")
+    parseBlock(code)
+  }
+
+  def parseBlock(code: String): Result[DefinitionBlock] = {
+    Parser.parseDefinition(code).toRight("failed parse.")
+  }
 }
