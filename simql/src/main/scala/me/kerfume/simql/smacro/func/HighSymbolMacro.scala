@@ -1,23 +1,32 @@
 package me.kerfume.simql.smacro.func
 
-import me.kerfume.simql.{ ASTMetaData, Result }
+import me.kerfume.simql.{ASTMetaData, Result}
 import me.kerfume.simql.node.DefinitionNode._
 import me.kerfume.simql.node.QueryNode._
 import me.kerfume.simql.smacro.MacroFunc
 import me.kerfume.simql.parser.Parser
+import me.kerfume.simql.functions._
 
 class HighSymbolMacro(
   val key: String,
   val parameters: Seq[MacroParam],
-  retQuery: String // TODO generate from smacro interpreter
-) extends MacroFunc with Checkable {
+  body: MacroFuncBody,
+  fmap: Map[String, InnerFunc])
+    extends MacroFunc
+    with Checkable {
   type ReturnType = HighSymbol
 
   override def apply(args: Seq[MacroArg]): Result[HighSymbol] = {
+    val statements :+ retQuery = body.body.toList
     for {
-      ret <- Parser.parse(Parser.highSymbol, retQuery).map(Right(_)).getOrElse(Left(s"function call error: parse failed return value. function name: $key"))
       varMap <- resolveArgs(args)
-      visitor = new MacroArgsResolverVisitor(varMap)
+      varMapResolved = {
+        qNodeToDNode(varMap) |>
+          (statements.collect { case s: Bind => s }.foldLeft(_) { case (acm, b) => b.eval(acm, fmap) }) |>
+          (dNodeToQNode(_))
+      } // TODO rescue cond var
+      ret <- returnQueryParse[HighSymbol](retQuery, Parser.highSymbol)
+      visitor = new MacroArgsResolverVisitor(varMapResolved)
       ok <- visitor.visitHighSymbol(ret).run(ASTMetaData.empty)
     } yield ok
   }

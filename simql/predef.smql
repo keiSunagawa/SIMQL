@@ -1,0 +1,7 @@
+define {
+  defun f(num1: Number) => Symbol {
+    let num2 = $add($num1, 1)
+    let num3 = $add($num2, 1)
+    q{ $`id + ?`($num3()) }
+  }
+}

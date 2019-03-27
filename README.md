@@ -81,11 +81,19 @@ groupBy ::= // TODO maybe omit
 macroParamType ::= "String" | "Number" | "Symbol" | "Cond"
 macroParam ::= symbol ":" macroParamType
 macroReturnType ::= "Cond" | "Symbol" | "Term"
-quasiquote ::= "q{"*"}"
-macroStatement ::= quasiquote // or TODO
-macroFuncBody ::= {macroStatement}
 macroFunc = "defun" symbol (" { macroParam } ")" "=>" macroReturnType "=" "{" macroFuncBody "}"
 
 definition ::= macroFunc // ひとまずmacroFuncのみ
 definitionBlock ::= "define" "{" {definition} "}"
+
+// macro function
+value ::= symbol | string | number
+var ::= "\$[a-zA-Z][a-zA-Z0-9_]*"
+funcArg ::= var | value
+functionCall ::= "\$[a-zA-Z][a-zA-Z0-9_]*"(" [macroArg] {"," macroArg} ")"
+expr ::= functionCall | value
+bind ::= "let" symbol "=" expr
+quasiquote ::= "q{"*"}"
+macroStatement ::= quasiquote | bind
+macroFuncBody ::= {macroStatement}
 ```

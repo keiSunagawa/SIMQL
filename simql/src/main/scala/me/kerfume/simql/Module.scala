@@ -1,7 +1,7 @@
 package me.kerfume.simql
 
 import me.kerfume.simql.node.QueryNode.Query
-import me.kerfume.simql.node.DefinitionNode.{ DefinitionBlock, MacroFunc }
+import me.kerfume.simql.node.DefinitionNode.{DefinitionBlock, MacroFunc}
 import me.kerfume.simql.parser.Parser
 import me.kerfume.simql.resolver._
 import me.kerfume.simql.generator.MySQLGenerator
@@ -31,15 +31,18 @@ object Module {
   }
 
   private[this] def makeMetadata(ast: Query): Result[ASTMetaData] = {
-    import me.kerfume.simql.smacro.func.{ Generator => MGenerator }
+    import me.kerfume.simql.smacro.func.{Generator => MGenerator}
+    import smacro.MacroFunc.buildinInnerFunctions
 
     val analyzed = Analyzer.analyze(ast)
     for {
       predefMacro <- DefinitionModule.loadPredef()
-      macroFuncs <- predefMacro.defs.collect { case c: MacroFunc => c }.mapE(a => MGenerator.generate(a))
-    } yield analyzed.copy(
-      macroFuncs = macroFuncs
-    )
+      macroFuncs <- predefMacro.defs.collect { case c: MacroFunc => c }
+                     .mapE(a => MGenerator.generate(a, buildinInnerFunctions.fmap))
+    } yield
+      analyzed.copy(
+        macroFuncs = macroFuncs
+      )
   }
 
   private[this] val resolvers: Seq[Resolver] = Seq(
@@ -52,7 +55,7 @@ object DefinitionModule {
   import scala.io.Source
 
   def loadPredef(): Result[DefinitionBlock] = {
-    val code = Source.fromFile("predefine.smql", "UTF-8").getLines.mkString("\n")
+    val code = Source.fromFile("predef.smql", "UTF-8").getLines.mkString("\n")
     parseBlock(code)
   }
 

@@ -4,9 +4,9 @@ import scala.util.parsing.combinator.JavaTokenParsers
 import me.kerfume.simql.node.QueryNode._
 
 trait QueryParser { self: JavaTokenParsers with CommonParser =>
-  def stringW: Parser[StringWrapper] = string ^^ { StringWrapper(_) }
-  def numberW: Parser[NumberWrapper] = number ^^ { NumberWrapper(_) }
-  def symbolW: Parser[SymbolWrapper] = symbol ^^ { SymbolWrapper(_) }
+  private[this] def stringW: Parser[StringWrapper] = string ^^ { StringWrapper(_) }
+  private[this] def numberW: Parser[NumberWrapper] = number ^^ { NumberWrapper(_) }
+  private[this] def symbolW: Parser[SymbolWrapper] = symbol ^^ { SymbolWrapper(_) }
   def nullLit: Parser[NullLit.type] = "null" ^^ { _ =>
     NullLit
   }

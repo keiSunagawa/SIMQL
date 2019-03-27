@@ -1,6 +1,6 @@
 package me.kerfume.simql.smacro
 
-import me.kerfume.simql.{ ASTVisitor, Result }
+import me.kerfume.simql.{ASTVisitor, Result}
 import me.kerfume.simql.node.QueryNode._
 
 package object func {
@@ -12,10 +12,13 @@ package object func {
     import scala.reflect.ClassTag
 
     def resolve[Node <: MacroArg: ClassTag](node: MacroApply): Result[Node] = {
-      varMap.get(node.symbol).toRight(s"not found variable. key: ${node.symbol}; >< I want to print function name!!").flatMap {
-        case hs: Node => Right(hs)
-        case _        => Left("macro function args parameter type error. this code is should be unreachable code :-/")
-      }
+      varMap
+        .get(node.symbol)
+        .toRight(s"not found variable. key: ${node.symbol}; >< I want to print function name!!")
+        .flatMap {
+          case hs: Node => Right(hs)
+          case _        => Left("macro function args parameter type error. this code is should be unreachable code :-/")
+        }
     }
 
     override def visitHighSymbol(node: HighSymbol): RE[HighSymbol] = node match {
@@ -31,7 +34,7 @@ package object func {
         re { meta =>
           resolve[Term](m) match {
             case Right(n) => Right(n)
-            case Left(_) => super.visitTerm(node).run(meta)
+            case Left(_)  => super.visitTerm(node).run(meta)
           }
         }
       case _ => super.visitTerm(node)
@@ -42,7 +45,7 @@ package object func {
         re { meta =>
           resolve[Cond](m) match {
             case Right(n) => Right(n)
-            case Left(_) => super.visitCond(node).run(meta)
+            case Left(_)  => super.visitCond(node).run(meta)
           }
         }
       case _ => super.visitCond(node)
