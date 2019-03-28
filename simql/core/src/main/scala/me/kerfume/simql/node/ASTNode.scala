@@ -1,0 +1,215 @@
+package me.kerfume.simql.node
+
+import me.kerfume.simql._
+import me.kerfume.simql.types._
+import me.kerfume.simql.functions._
+import cats.instances.list._
+
+sealed trait ASTNode
+sealed trait FunctionAST extends ASTNode
+sealed trait QueryAST extends ASTNode
+sealed trait EvalNode { self: FunctionAST =>
+  def eval(scope: Scope, meta: ASTMetaData): Result[Expr]
+}
+trait Leaf { self: EvalNode with Expr =>
+  def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = Right(this)
+}
+
+sealed trait Expr extends QueryAST with FunctionAST with EvalNode
+
+case class FunctionCall(symbol: String, args: List[Expr]) extends QueryAST with FunctionAST with Expr {
+
+  override def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+    for {
+      f <- scope.get(symbol).toRight(FunctionNotFound(symbol))
+      res <- f(args, scope, meta)
+    } yield res
+  }
+}
+
+case class StringLit(value: String) extends Expr with Leaf
+case class NumberLit(value: BigDecimal) extends Expr with Leaf
+case object NullLit extends Expr with Leaf
+case class SymbolLit(label: String) extends Expr with Leaf
+case class Raw(sql: String, args: List[Expr]) extends Expr {
+  def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+    for {
+      evaled <- args.mapE(_.eval(scope, meta))
+    } yield
+      this.copy(
+        args = evaled
+      )
+  }
+}
+
+case class Op(op: ExprOp.Op) extends QueryAST
+
+// resolved operation priority. by making syntax tree.
+case class BExpr(lhs: Expr, op: Op, rhs: Expr) extends Expr {
+  def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+    for {
+      evaledLhs <- lhs.eval(scope, meta)
+      evaledRhs <- rhs.eval(scope, meta)
+    } yield
+      this.copy(
+        lhs = evaledLhs,
+        rhs = evaledLhs
+      )
+  }
+}
+
+case class RBracket(expr: Expr) extends Expr {
+  def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+    for {
+      evaled <- expr.eval(scope, meta)
+    } yield
+      this.copy(
+        expr = evaled
+      )
+  }
+}
+
+case class JoinType(value: JoinType.Op) extends QueryAST
+case class Join(joinType: JoinType, rhsTable: Expr, on: Expr) extends QueryAST // real allowed to column | row | subQuery
+
+case class OrderType(value: OrderType.Op) extends QueryAST
+
+case class From(lhs: Expr, rhss: List[Join]) extends QueryAST // real allowed to column | row | subQuery
+case class Select(columns: NEL[Expr]) extends QueryAST // real allowed to column | row
+case class Where(expr: Expr) extends QueryAST
+case class LimitOffset(limit: NumberLit, offset: Option[NumberLit]) extends QueryAST
+case class Order(orderType: OrderType, columns: NEL[Expr]) extends QueryAST // real allowed to column | row
+
+case class Query(
+  from: From,
+  select: Option[Select],
+  where: Option[Where],
+  limitOffset: Option[LimitOffset],
+  order: Option[Order])
+    extends QueryAST
+
+object ExprOp {
+  sealed trait Op
+  case object GT extends Op
+  case object LT extends Op
+  case object GE extends Op
+  case object LE extends Op
+  case object EQ extends Op
+  case object NE extends Op
+
+  case object And extends Op
+  case object Or extends Op
+}
+
+object JoinType {
+  sealed trait Op
+  case object LeftJoin extends Op
+  case object InnerJoin extends Op
+}
+
+object OrderType {
+  sealed trait Op
+  case object Asc extends Op
+  case object Desc extends Op
+}
+
+// for function ast
+case class Bind(symbol: String, value: Expr) extends FunctionAST {
+  def bind(scope: Scope, meta: ASTMetaData): Result[Scope] = {
+    for {
+      expr <- value.eval(scope, meta)
+    } yield scope + (symbol -> new Variable(symbol, expr, scope))
+  }
+  def bind2(scope: Scope, meta: ASTMetaData): Scope = {
+    scope + (symbol -> new Variable(symbol, value, scope))
+  }
+}
+
+sealed trait FunctionParam {
+  val key: String
+  val tpe: FunctionReturnType
+  type Actual <: Expr
+
+  def resolve0: PartialFunction[Expr, Actual]
+  def resolve(arg: Expr, outerScope: Scope, meta: ASTMetaData): Result[(String, Actual)] = {
+    for {
+      evaled <- arg.eval(outerScope, meta)
+      resolved <- resolve0.lift(evaled).map(key -> _).toRight(FunctionParamTypeError(this, arg))
+    } yield resolved
+  }
+}
+case class StringParam(key: String) extends FunctionParam {
+  override type Actual = StringLit
+  val tpe = StringType
+  def resolve0 = { case e: StringLit => e }
+}
+case class NumberParam(key: String) extends FunctionParam {
+  override type Actual = NumberLit
+  val tpe = NumberType
+  def resolve0 = { case e: NumberLit => e }
+}
+case class SymbolParam(key: String) extends FunctionParam {
+  override type Actual = SymbolLit
+  val tpe = SymbolType
+  def resolve0 = { case e: SymbolLit => e }
+}
+case class ExprParam(key: String) extends FunctionParam { // pend implements
+  override type Actual = Expr
+  val tpe = ExprType
+  def resolve0 = { case e: Expr => e }
+}
+
+sealed trait FunctionReturnType
+case object StringType extends FunctionReturnType
+case object NumberType extends FunctionReturnType
+case object SymbolType extends FunctionReturnType
+case object ExprType extends FunctionReturnType
+object FunctionReturnType {
+  def fromExpr(expr: Expr, scope: Scope): FunctionReturnType = expr match {
+    case _: StringLit    => StringType
+    case _: NumberLit    => NumberType
+    case _: SymbolLit    => SymbolType
+    case f: FunctionCall => scope(f.symbol).returnType
+    case _: Expr         => ExprType
+  }
+}
+
+trait SIMQLFunction {
+  val key: String
+  val params: List[FunctionParam]
+  val returnType: FunctionReturnType
+  val body: List[Bind]
+  val returnExpr: Expr // TODO safe un function Expr
+
+  // TODO need to args check before apply
+  def apply(args: List[Expr], outerScope: Scope, meta: ASTMetaData): Result[Expr] = {
+    val resolvedArgs = params.zip(args).map { case (p, a) => p.key -> a }
+    val argScope: Scope = resolvedArgs.map { case (k, v) => k -> new Variable(k, v, outerScope) }(collection.breakOut)
+    val scope = outerScope ++ argScope
+    for {
+      result <- apply0(scope, meta)
+    } yield result
+  }
+
+  protected[this] def apply0(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+    val binded = body.foldLeft(scope) {
+      case (acm, b) => b.bind2(acm, meta)
+    }
+    for {
+      result <- returnExpr.eval(binded, meta)
+    } yield result
+  }
+}
+
+class Variable(val key: String, expr: Expr, outerScope: Scope) extends SIMQLFunction {
+  val params: List[FunctionParam] = Nil
+  val returnType: FunctionReturnType = FunctionReturnType.fromExpr(expr, outerScope)
+  val body: List[Bind] = Nil
+  val returnExpr: Expr = expr
+
+  override def apply0(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+    for {
+      result <- returnExpr.eval(outerScope, meta)
+    } yield result
+  }
+}
