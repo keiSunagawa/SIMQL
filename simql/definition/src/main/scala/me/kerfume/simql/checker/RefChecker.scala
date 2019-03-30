@@ -5,7 +5,7 @@ import me.kerfume.simql.node._
 import me.kerfume.simql.functions._
 import cats.instances.list._
 
-class RefChecker extends Checker {
+class RefChecker extends FunctionChecker {
   import RefChecker._
 
   type ScopeValue = Unit

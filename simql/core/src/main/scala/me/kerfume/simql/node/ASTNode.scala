@@ -181,7 +181,6 @@ trait SIMQLFunction {
   val body: List[Bind]
   val returnExpr: Expr // TODO safe un function Expr
 
-  // TODO need to args check before apply
   def apply(args: List[Expr], outerScope: Scope, meta: ASTMetaData): Result[Expr] = {
     val resolvedArgs = params.zip(args).map { case (p, a) => p.key -> a }
     val argScope: Scope = resolvedArgs.map { case (k, v) => k -> new Variable(k, v, outerScope) }(collection.breakOut)
@@ -212,4 +211,43 @@ class Variable(val key: String, expr: Expr, outerScope: Scope) extends SIMQLFunc
       result <- returnExpr.eval(outerScope, meta)
     } yield result
   }
+}
+
+object SIMQLFunction {
+  def checkFunctionCall(f: FunctionCall, scope: Scope): Result[FunctionReturnType] = {
+    val defun = scope(f.symbol)
+    for {
+      _ <- Either.cond(f.args.length == defun.params.length, (), UnmatchArgLength())
+      _ <- f.args.zip(defun.params).zipWithIndex.mapE {
+        case ((ff: FunctionCall, p), i) =>
+          checkFunctionCall(ff, scope).flatMap { ret =>
+            if (isSameType(ret, p)) Right(())
+            else Left(TypeError(f.symbol, i, ff.symbol, p))
+          }
+        case ((a, p), i) =>
+          val ret = FunctionReturnType.fromExpr(a, Map.empty)
+          if (isSameType(ret, p)) Right(())
+          else Left(TypeError(f.symbol, i, a.toString, p))
+      }
+    } yield defun.returnType
+  }
+
+  private[this] def isSameType(arg: FunctionReturnType, param: FunctionParam): Boolean = {
+    (arg, param) match {
+      case (StringType, _: StringParam) => true
+      case (NumberType, _: NumberParam) => true
+      case (SymbolType, _: SymbolParam) => true
+      case (_, _: ExprParam)            => true
+      case _                            => false
+    }
+  }
+
+  case class TypeError(
+    fname: String,
+    index: Int,
+    found: String,
+    require: FunctionParam)
+    extends SIMQLError
+  case class ReturnTypeError(found: FunctionReturnType, require: FunctionReturnType) extends SIMQLError
+  case class UnmatchArgLength() extends SIMQLError
 }

@@ -5,12 +5,12 @@ import me.kerfume.simql.node._
 import me.kerfume.simql.functions._
 import cats.instances.list._
 
-class TypeChecker extends Checker {
-  import TypeChecker._
+class TypeChecker extends FunctionChecker {
+  import SIMQLFunction._
 
-  type ScopeValue = FunctionSignature
+  type ScopeValue = SIMQLFunction
   def check(f: SIMQLFunction, scope: CScope): Result[CScope] = {
-    val withParam: CScope = scope ++ f.params.map(p => p.key -> FunctionSignature(Nil, p.tpe))
+    val withParam: CScope = scope ++ f.params.map(p => p.key -> variable(p.tpe))
     for {
       checked <- f.body.foldE(withParam) { case (acm, b) => checkBind(b, acm) }
       _ <- f.returnExpr match {
@@ -27,7 +27,7 @@ class TypeChecker extends Checker {
   }
 
   private[this] def checkBind(b: Bind, scope: CScope): Result[CScope] = {
-    def update(tpe: FunctionReturnType) = scope + (b.symbol -> FunctionSignature(Nil, tpe))
+    def update(tpe: FunctionReturnType) = scope + (b.symbol -> variable(tpe))
     b.value match {
       case f: FunctionCall =>
         checkFunctionCall(f, scope).map(update)
@@ -36,44 +36,15 @@ class TypeChecker extends Checker {
         Right(update(tpe))
     }
   }
-  private[this] def checkFunctionCall(f: FunctionCall, scope: CScope): Result[FunctionReturnType] = {
-    val defun = scope(f.symbol)
-    for {
-      _ <- Either.cond(f.args.length == defun.param.length, (), UnmatchArgLength())
-      _ <- f.args.zip(defun.param).zipWithIndex.mapE {
-            case ((ff: FunctionCall, p), i) =>
-              checkFunctionCall(ff, scope).flatMap { ret =>
-                if (isSameType(ret, p)) Right(())
-                else Left(TypeError(f.symbol, i, ff.symbol, p))
-              }
-            case ((a, p), i) =>
-              val ret = FunctionReturnType.fromExpr(a, Map.empty)
-              if (isSameType(ret, p)) Right(())
-              else Left(TypeError(f.symbol, i, a.toString, p))
-          }
-    } yield defun.ret
-  }
 
-  private[this] def isSameType(arg: FunctionReturnType, param: FunctionParam): Boolean = {
-    (arg, param) match {
-      case (StringType, _: StringParam) => true
-      case (NumberType, _: NumberParam) => true
-      case (SymbolType, _: SymbolParam) => true
-      case (_, _: ExprParam)            => true
-      case _                            => false
+  // use only type check
+  private[this] def variable(retType: FunctionReturnType): SIMQLFunction = {
+    new SIMQLFunction {
+      val key: String = ""
+      val params: List[FunctionParam] = Nil
+      val returnType: FunctionReturnType = retType
+      val body: List[Bind] = Nil
+      val returnExpr: Expr = SymbolLit("")
     }
   }
-}
-
-object TypeChecker {
-  case class TypeError(
-    fname: String,
-    index: Int,
-    found: String,
-    require: FunctionParam)
-      extends SIMQLError
-  case class ReturnTypeError(found: FunctionReturnType, require: FunctionReturnType) extends SIMQLError
-  case class UnmatchArgLength() extends SIMQLError
-
-  case class FunctionSignature(param: List[FunctionParam], ret: FunctionReturnType)
 }

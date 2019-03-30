@@ -23,6 +23,7 @@ object Module {
     for {
       ast <- Parser.parseSimql(query).toRight(UnhandleError("failed parse."))
       meta <- makeMetadata(ast)
+      _ <- queryChecker.mapE(_.check(ast, meta))
       resolved <- resolvers.foldE(ast) { case (before, resolver) => resolver.resolve(before, meta) }
     } yield resolved
   }
@@ -38,9 +39,7 @@ object Module {
                  case (s, f) =>
                    for {
                      _ <- (new RefChecker).check(f, s.map { case (key, _) => key -> () })
-                     _ <- (new TypeChecker).check(f, s.map {
-                           case (key, f) => key -> TypeChecker.FunctionSignature(f.params, f.returnType)
-                         })
+                     _ <- (new TypeChecker).check(f, s)
                    } yield s + (f.key -> f)
                }
     } yield
@@ -51,6 +50,10 @@ object Module {
 
   private[this] val resolvers: List[Resolver] = List(
     new FunctionResolver
+  )
+  private[this] val queryChecker: List[QueryChecker] = List(
+    new FunctionCallChecker,
+    new LocationChecker
   )
 }
 

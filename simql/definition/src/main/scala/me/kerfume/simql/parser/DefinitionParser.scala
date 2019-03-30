@@ -75,9 +75,7 @@ object Test {
     val scope = buildin.functions
     for {
       _ <- (new RefChecker).check(f, scope.map { case (key, _) => key -> () })
-      _ <- (new TypeChecker).check(f, scope.map {
-            case (key, f) => key -> TypeChecker.FunctionSignature(f.params, f.returnType)
-          })
+      _ <- (new TypeChecker).check(f, scope)
       res <- f(f1args, scope, ASTMetaData.empty)
     } yield res
   }
