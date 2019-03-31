@@ -115,12 +115,16 @@ object OrderType {
 
 // for function ast
 case class Bind(symbol: String, value: Expr) extends FunctionAST {
-  def bind(scope: Scope, ctx: QueryContext): Result[Scope] = {
-    for {
-      expr <- value.eval(scope, ctx)
-    } yield scope + (symbol -> new Variable(symbol, expr, scope))
-  }
-  def bind2(scope: Scope, ctx: QueryContext): Scope = {
+  private[this] def caseEval(scope: Scope, ctx: QueryContext): Unit =
+    value match { // FIXME: unsafe and known eval function by Bind class
+      case f: FunctionCall =>
+        if (f.symbol == "eval") {
+          f.eval(scope, ctx)
+        }
+      case _ => ()
+    }
+  def bind(scope: Scope, ctx: QueryContext): Scope = {
+    caseEval(scope, ctx)
     scope + (symbol -> new Variable(symbol, value, scope))
   }
 }
@@ -192,7 +196,7 @@ trait SIMQLFunction {
 
   protected[this] def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
     val binded = body.foldLeft(scope) {
-      case (acm, b) => b.bind2(acm, ctx)
+      case (acm, b) => b.bind(acm, ctx)
     }
     for {
       result <- returnExpr.eval(binded, ctx)
