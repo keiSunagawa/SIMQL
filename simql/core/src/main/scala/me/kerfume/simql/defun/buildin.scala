@@ -12,22 +12,50 @@ object buildin {
       scope(key)(Nil, scope, ctx).right.get.asInstanceOf[T]
   }
   object calc {
-    val values = List(Add, ConcatSymbol)
+    val values = List(Add, Sub, Mul, Div, ConcatString, ConcatSymbol)
 
-    object Add extends BuildInFunction {
-      val key: String = "add"
+    trait BinaryArithmetic extends BuildInFunction {
+      protected[this] val calc: (BigDecimal, BigDecimal) => BigDecimal
+
       val params: List[FunctionParam] = List(NumberParam("a"), NumberParam("b"))
       val returnType: FunctionReturnType = NumberType
 
       override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
         val a = getArg[NumberLit]("a", scope, ctx).value
         val b = getArg[NumberLit]("b", scope, ctx).value
-        Right(NumberLit(a + b))
+        Right(NumberLit(calc(a, b)))
+      }
+    }
+    object Add extends BinaryArithmetic {
+      val key: String = "add"
+      val calc = (_ + _)
+    }
+    object Sub extends BinaryArithmetic {
+      val key: String = "sub"
+      val calc = (_ - _)
+    }
+    object Mul extends BinaryArithmetic {
+      val key: String = "mul"
+      val calc = (_ * _)
+    }
+    object Div extends BinaryArithmetic {
+      val key: String = "div"
+      val calc = { (a, b) =>
+        if (b != 0) a / b else 0
+      }
+    }
+    object ConcatString extends BuildInFunction {
+      val key: String = "concat_string"
+      val params: List[FunctionParam] = List(StringParam("a"), StringParam("b"))
+      val returnType: FunctionReturnType = StringType
+
+      override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
+        val a = getArg[StringLit]("a", scope, ctx).value
+        val b = getArg[StringLit]("b", scope, ctx).value
+        Right(StringLit(a + b))
       }
     }
     object ConcatSymbol extends BuildInFunction {
-      val values = List(ConcatSymbol)
-
       val key: String = "concat_symbol"
       val params: List[FunctionParam] = List(SymbolParam("a"), SymbolParam("b"))
       val returnType: FunctionReturnType = SymbolType

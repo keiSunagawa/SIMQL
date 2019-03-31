@@ -34,8 +34,9 @@ object Module {
     val analyzed = analyzer.analyze(ast, ctx)
     for {
       predef <- DefinitionModule.loadPredef()
+      userdef <- DefinitionModule.loadUserdef()
       buildin = me.kerfume.simql.defun.buildin.functions
-      gscope <- predef.foldE(buildin) {
+      gscope <- (predef ++ userdef).foldE(buildin) {
                  case (s, f) =>
                    for {
                      _ <- (new RefChecker).check(f, s.map { case (key, _) => key -> () })
@@ -64,6 +65,10 @@ object DefinitionModule {
 
   def loadPredef(): Result[List[SIMQLFunction]] = {
     val code = Source.fromFile("predef.smql", "UTF-8").getLines.mkString("\n")
+    Parser.parseDefinition(code).toRight(UnhandleError("failed parse."))
+  }
+  def loadUserdef(): Result[List[SIMQLFunction]] = {
+    val code = Source.fromFile("userdef.smql", "UTF-8").getLines.mkString("\n")
     Parser.parseDefinition(code).toRight(UnhandleError("failed parse."))
   }
 }
