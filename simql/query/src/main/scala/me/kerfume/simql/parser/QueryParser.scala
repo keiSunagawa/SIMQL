@@ -82,7 +82,7 @@ trait QueryParser { self: JavaTokenParsers with CoreParser =>
     }
     JoinType(jt)
   }
-  def join = joinType ~ term ~ "?>" ~ term ^^ {
+  def join = joinType ~ term ~ "?>" ~ expr ^^ {
     case jt ~ rightTable ~ _ ~ c =>
       Join(jt, rightTable, c)
   }

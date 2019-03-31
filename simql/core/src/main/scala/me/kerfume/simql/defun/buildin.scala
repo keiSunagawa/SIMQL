@@ -13,13 +13,13 @@ object buildin {
   }
   object Add extends BuildInFunction {
     val key: String = "add"
-    val params: List[FunctionParam] = List(NumberParam("num1"), NumberParam("num2"))
+    val params: List[FunctionParam] = List(NumberParam("a"), NumberParam("b"))
     val returnType: FunctionReturnType = NumberType
 
     override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
-      val n1 = scope("num1")(Nil, scope, ctx).right.get.asInstanceOf[NumberLit].value
-      val n2 = scope("num2")(Nil, scope, ctx).right.get.asInstanceOf[NumberLit].value
-      Right(NumberLit(n1 + n2))
+      val a = getArg[NumberLit]("a", scope, ctx).value
+      val b = getArg[NumberLit]("b", scope, ctx).value
+      Right(NumberLit(a + b))
     }
   }
   object ConcatSymbol extends BuildInFunction {
