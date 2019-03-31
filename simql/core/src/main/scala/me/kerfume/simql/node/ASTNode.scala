@@ -163,11 +163,20 @@ case class ExprParam(key: String) extends FunctionParam { // pend implements
   def resolve0 = { case e: Expr => e }
 }
 
-sealed trait FunctionReturnType
-case object StringType extends FunctionReturnType
-case object NumberType extends FunctionReturnType
-case object SymbolType extends FunctionReturnType
-case object ExprType extends FunctionReturnType
+sealed trait FunctionReturnType {
+  def isAllowed(that: FunctionReturnType): Boolean
+}
+trait LeafType { self: FunctionReturnType =>
+  def isAllowed(that: FunctionReturnType): Boolean = that == this
+}
+case object StringType extends FunctionReturnType with LeafType
+case object NumberType extends FunctionReturnType with LeafType
+case object SymbolType extends FunctionReturnType with LeafType
+case object ExprType extends FunctionReturnType {
+  def isAllowed(that: FunctionReturnType): Boolean = that match {
+    case StringType | NumberType | SymbolType | ExprType => true
+  }
+}
 object FunctionReturnType {
   def fromExpr(expr: Expr, scope: Scope): FunctionReturnType = expr match {
     case _: StringLit    => StringType

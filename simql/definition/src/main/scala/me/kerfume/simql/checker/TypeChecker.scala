@@ -17,7 +17,7 @@ class TypeChecker extends FunctionChecker {
             case ff: FunctionCall =>
               for {
                 ret <- checkFunctionCall(ff, checked)
-                _ <- Either.cond(ret == f.returnType, (), ReturnTypeError(ret, f.returnType))
+                _ <- Either.cond(f.returnType.isAllowed(ret), (), ReturnTypeError(ret, f.returnType))
               } yield ()
             case other =>
               val ret = FunctionReturnType.fromExpr(other, Map.empty)

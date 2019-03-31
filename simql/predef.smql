@@ -11,6 +11,9 @@ define {
     let accessor = $concat_symbol($tbl, $single_dot)
     $concat_symbol($accessor, $col)
   }
+  defun sub_type_test(n: Number) => Expr {
+    $n
+  }
   defun concat(str1: String, str2: String) => Expr {
     let res = q{ 3 }
     let res2 = $add($res, $res)
