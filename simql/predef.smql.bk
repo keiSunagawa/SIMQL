@@ -1,8 +1,0 @@
-define {
-  defun c(col: Symbol) => Symbol {
-    q{ $`COUNT(?)`($col()) }
-  }
-  defun like(col: Symbol str: String) => Cond {
-    q{ $`? LIKE(?)`($col() $str()) }
-  }
-}

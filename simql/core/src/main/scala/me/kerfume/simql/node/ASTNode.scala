@@ -157,6 +157,11 @@ case class SymbolParam(key: String) extends FunctionParam {
   val tpe = SymbolType
   def resolve0 = { case e: SymbolLit => e }
 }
+case class RawParam(key: String) extends FunctionParam {
+  override type Actual = Raw
+  val tpe = RawType
+  def resolve0 = { case e: Raw => e }
+}
 case class ExprParam(key: String) extends FunctionParam { // pend implements
   override type Actual = Expr
   val tpe = ExprType
@@ -172,9 +177,10 @@ trait LeafType { self: FunctionReturnType =>
 case object StringType extends FunctionReturnType with LeafType
 case object NumberType extends FunctionReturnType with LeafType
 case object SymbolType extends FunctionReturnType with LeafType
+case object RawType extends FunctionReturnType with LeafType
 case object ExprType extends FunctionReturnType {
   def isAllowed(that: FunctionReturnType): Boolean = that match {
-    case StringType | NumberType | SymbolType | ExprType => true
+    case StringType | NumberType | SymbolType | RawType | ExprType => true
   }
 }
 object FunctionReturnType {
@@ -182,6 +188,7 @@ object FunctionReturnType {
     case _: StringLit    => StringType
     case _: NumberLit    => NumberType
     case _: SymbolLit    => SymbolType
+    case _: Raw          => RawType
     case f: FunctionCall => scope(f.symbol).returnType
     case _: Expr         => ExprType
   }
@@ -250,6 +257,7 @@ object SIMQLFunction {
       case (StringType, _: StringParam) => true
       case (NumberType, _: NumberParam) => true
       case (SymbolType, _: SymbolParam) => true
+      case (RawType, _: Raw)            => true
       case (_, _: ExprParam)            => true
       case _                            => false
     }
@@ -261,6 +269,6 @@ object SIMQLFunction {
     found: String,
     require: FunctionParam)
       extends SIMQLError
-  case class ReturnTypeError(found: FunctionReturnType, require: FunctionReturnType) extends SIMQLError
+  case class ReturnTypeError(key: String, found: FunctionReturnType, require: FunctionReturnType) extends SIMQLError
   case class UnmatchArgLength() extends SIMQLError
 }

@@ -10,4 +10,12 @@ define {
     let accessor = $concat_symbol($tbl, $single_dot)
     $concat_symbol($accessor, $col)
   }
+  defun c(col: Expr) => Raw {
+    q{ $`COUNT(?)`($col) }
+  }
+  defun like(col: Symbol, keyword: String) => Expr {
+    let lk = $concat_string($keyword, "%")
+    let lk = $concat_string("%", $lk)
+    q{ $`? LIKE(?)`($col, $keyword) }
+  }
 }

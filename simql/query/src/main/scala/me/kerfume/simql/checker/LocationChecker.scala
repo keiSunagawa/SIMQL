@@ -62,6 +62,7 @@ object LocationCheckVisitor extends ASTVisitor {
       case StringType => StringLit("")
       case NumberType => NumberLit(0)
       case SymbolType => SymbolLit("")
+      case RawType    => Raw("", Nil)
       case ExprType   => BExpr(NullLit, Op(ExprOp.EQ), NullLit)
     }
     expr match {

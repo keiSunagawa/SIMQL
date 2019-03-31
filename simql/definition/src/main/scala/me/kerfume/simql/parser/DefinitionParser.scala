@@ -6,10 +6,11 @@ import scala.util.parsing.combinator.JavaTokenParsers
 import me.kerfume.simql.node._
 
 trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser =>
-  def functionType: Parser[syntax.FType] = "(String|Number|Symbol|Expr)".r ^^ {
+  def functionType: Parser[syntax.FType] = "(String|Number|Symbol|Expr|Raw)".r ^^ {
     case "String" => syntax.StringType
     case "Number" => syntax.NumberType
     case "Symbol" => syntax.SymbolType
+    case "Raw"    => syntax.RawType
     case "Expr"   => syntax.ExprType
   }
   def functionParam: Parser[FunctionParam] = (symbol <~ ":") ~ functionType ^^ {
@@ -18,6 +19,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
         case syntax.StringType => StringParam(s.label)
         case syntax.NumberType => NumberParam(s.label)
         case syntax.SymbolType => SymbolParam(s.label)
+        case syntax.RawType    => RawParam(s.label)
         case syntax.ExprType   => ExprParam(s.label)
       }
   }
@@ -26,6 +28,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
     case syntax.StringType => StringType
     case syntax.NumberType => NumberType
     case syntax.SymbolType => SymbolType
+    case syntax.RawType    => RawType
     case syntax.ExprType   => ExprType
   }
 

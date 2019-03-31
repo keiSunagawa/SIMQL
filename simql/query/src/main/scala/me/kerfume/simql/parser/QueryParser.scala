@@ -10,9 +10,9 @@ trait QueryParser { self: JavaTokenParsers with CoreParser =>
     NullLit
   }
 
-  def raw: Parser[Raw] = """\$`.*`""".r ~ opt("(" ~> rep(term) <~ ")") ^^ {
+  def raw: Parser[Raw] = """\$`.*`""".r ~ opt("(" ~> term ~ rep("," ~> term) <~ ")") ^^ {
     case s ~ as =>
-      val args = as.toList.flatten
+      val args = as.toList.flatMap { case h ~ t => h :: t }
       val sql = s.tail.replaceAll("`", "")
       Raw(sql, args)
   }
