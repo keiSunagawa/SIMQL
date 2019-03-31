@@ -49,7 +49,9 @@ object Module {
   }
 
   private[this] val resolvers: List[Resolver] = List(
-    new FunctionResolver
+    new FunctionResolver,
+    new NullResolver,
+    new FunctionResolver // FIXME function double for null resolver...
   )
   private[this] val queryChecker: List[QueryChecker] = List(
     new FunctionCallChecker,

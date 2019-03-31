@@ -1,0 +1,17 @@
+define {
+  defun f(num1: Number) => Number {
+    let x = 3
+    let num2 = $add($num1, 1)
+    let num3 = $add($num2, 1)
+    let dbg = $eval($debug($num3))
+    $num3
+  }
+  defun sub_type_test(n: Number) => Expr {
+    $n
+  }
+  defun concat(str1: String, str2: String) => Expr {
+    let res = q{ 3 }
+    let res2 = $add($res, $res)
+    q{ $res2 == 5 }
+  }
+}
