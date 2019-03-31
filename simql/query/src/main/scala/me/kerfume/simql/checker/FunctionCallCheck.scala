@@ -13,6 +13,9 @@ object FunctionCallCheckVisitor extends ASTVisitor {
   import ASTVisitor._
 
   override def visitFunctionCall(node: FunctionCall): RE[FunctionCall] = re { ctx =>
-    SIMQLFunction.checkFunctionCall(node, ctx.globalScope).map(_ => node)
+    for {
+      _ <- Either.cond(ctx.globalScope.contains(node.symbol), (), FunctionNotFound(node.symbol))
+      _ <- SIMQLFunction.checkFunctionCall(node, ctx.globalScope)
+    } yield node
   }
 }
