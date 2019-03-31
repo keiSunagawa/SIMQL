@@ -53,7 +53,7 @@ case class BExpr(lhs: Expr, op: Op, rhs: Expr) extends Expr {
     } yield
       this.copy(
         lhs = evaledLhs,
-        rhs = evaledLhs
+        rhs = evaledRhs
       )
   }
 }

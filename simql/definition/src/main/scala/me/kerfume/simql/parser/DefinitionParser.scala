@@ -29,24 +29,24 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
     case syntax.ExprType   => ExprType
   }
 
-  def bind: Parser[Bind] = ("let" ~> symbol) ~ ("=" ~> expr) ^^ {
+  def dterm: Parser[Expr] = string | number | symbol | functionCall
+  def queryBlock: Parser[Expr] = "q{" ~> expr <~ "}"
+  def dexpr: Parser[Expr] =  queryBlock | dterm
+
+  def bind: Parser[Bind] = ("let" ~> symbol) ~ ("=" ~> dexpr) ^^ {
     case s ~ e =>
       Bind(s.label, e)
   }
 
-  // def quasiquote: Parser[Quasiquote] = "q{" ~> """[^\}]*""".r <~ "}" ^^ { Quasiquote(_) } // いらないかも...
-
-  def functionReturnNode: Parser[Expr] = expr // TODO
-
-  // TODO parameter separate by ","
   def defun: Parser[SIMQLFunction] =
-    ("defun" ~> symbol) ~ ("(" ~> rep(functionParam) <~ ")") ~ ("=>" ~> functionReturnType <~ "{") ~ (rep(bind) ~ functionReturnNode <~ "}") ^^ {
+    ("defun" ~> symbol) ~ ("(" ~> opt(functionParam~rep(","~>functionParam)) <~ ")") ~ ("=>" ~> functionReturnType <~ "{") ~ (rep(bind) ~ dexpr <~ "}") ^^ {
       case s ~ ps ~ retType ~ block =>
         val bd ~ retNode = block
+        val paramList = ps.toList.flatMap { case h~t => h :: t }
 
         new SIMQLFunction {
           val key = s.label
-          val params = ps
+          val params = paramList
           val returnType = retType
           val body = bd
           val returnExpr = retNode
@@ -57,26 +57,3 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
 }
 
 object DefinitionParser extends JavaTokenParsers with DefinitionParser with CoreParser with QueryParser
-
-object Test {
-  import me.kerfume.simql._
-  import me.kerfume.simql.defun.buildin
-
-  val f1 =
-    """defun f(num1: Number) => Number {
-      |  let num2 = $add($num1(), 1)
-      |  $num2()
-      |}
-    """.stripMargin
-  val f1args = List(NumberLit(3))
-
-  def run(): Result[Expr] = {
-    val f = DefinitionParser.parse(DefinitionParser.defun, f1).get
-    val scope = buildin.functions
-    for {
-      _ <- (new RefChecker).check(f, scope.map { case (key, _) => key -> () })
-      _ <- (new TypeChecker).check(f, scope)
-      res <- f(f1args, scope, ASTMetaData.empty)
-    } yield res
-  }
-}

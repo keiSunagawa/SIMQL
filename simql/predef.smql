@@ -1,7 +1,17 @@
 define {
   defun f(num1: Number) => Number {
-    let num2 = $add($num1(), 1)
-    let num3 = $add($num2(), 1)
-    $num3()
+    let x = 3
+    let num2 = $add($num1, 1)
+    let num3 = $add($num2, 1)
+    $num3
+  }
+  defun cst(str1: String, str2: String) => String {
+    $str1
+  }
+  defun concat(str1: String, str2: String) => Expr {
+    let res = q{ 3 }
+    let res3 = $cst("aa", "bb")
+    let res2 = $add($res, $res)
+    q{ $res2 == 5 }
   }
 }
