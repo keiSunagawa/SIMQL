@@ -9,20 +9,20 @@ sealed trait ASTNode
 sealed trait FunctionAST extends ASTNode
 sealed trait QueryAST extends ASTNode
 sealed trait EvalNode { self: FunctionAST =>
-  def eval(scope: Scope, meta: ASTMetaData): Result[Expr]
+  def eval(scope: Scope, ctx: QueryContext): Result[Expr]
 }
 trait Leaf { self: EvalNode with Expr =>
-  def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = Right(this)
+  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = Right(this)
 }
 
 sealed trait Expr extends QueryAST with FunctionAST with EvalNode
 
 case class FunctionCall(symbol: String, args: List[Expr]) extends QueryAST with FunctionAST with Expr {
 
-  override def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+  override def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
     for {
       f <- scope.get(symbol).toRight(FunctionNotFound(symbol))
-      res <- f(args, scope, meta)
+      res <- f(args, scope, ctx)
     } yield res
   }
 }
@@ -32,9 +32,9 @@ case class NumberLit(value: BigDecimal) extends Expr with Leaf
 case object NullLit extends Expr with Leaf
 case class SymbolLit(label: String) extends Expr with Leaf
 case class Raw(sql: String, args: List[Expr]) extends Expr {
-  def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
     for {
-      evaled <- args.mapE(_.eval(scope, meta))
+      evaled <- args.mapE(_.eval(scope, ctx))
     } yield
       this.copy(
         args = evaled
@@ -46,10 +46,10 @@ case class Op(op: ExprOp.Op) extends QueryAST
 
 // resolved operation priority. by making syntax tree.
 case class BExpr(lhs: Expr, op: Op, rhs: Expr) extends Expr {
-  def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
     for {
-      evaledLhs <- lhs.eval(scope, meta)
-      evaledRhs <- rhs.eval(scope, meta)
+      evaledLhs <- lhs.eval(scope, ctx)
+      evaledRhs <- rhs.eval(scope, ctx)
     } yield
       this.copy(
         lhs = evaledLhs,
@@ -59,9 +59,9 @@ case class BExpr(lhs: Expr, op: Op, rhs: Expr) extends Expr {
 }
 
 case class RBracket(expr: Expr) extends Expr {
-  def eval(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
     for {
-      evaled <- expr.eval(scope, meta)
+      evaled <- expr.eval(scope, ctx)
     } yield
       this.copy(
         expr = evaled
@@ -115,12 +115,12 @@ object OrderType {
 
 // for function ast
 case class Bind(symbol: String, value: Expr) extends FunctionAST {
-  def bind(scope: Scope, meta: ASTMetaData): Result[Scope] = {
+  def bind(scope: Scope, ctx: QueryContext): Result[Scope] = {
     for {
-      expr <- value.eval(scope, meta)
+      expr <- value.eval(scope, ctx)
     } yield scope + (symbol -> new Variable(symbol, expr, scope))
   }
-  def bind2(scope: Scope, meta: ASTMetaData): Scope = {
+  def bind2(scope: Scope, ctx: QueryContext): Scope = {
     scope + (symbol -> new Variable(symbol, value, scope))
   }
 }
@@ -131,9 +131,9 @@ sealed trait FunctionParam {
   type Actual <: Expr
 
   def resolve0: PartialFunction[Expr, Actual]
-  def resolve(arg: Expr, outerScope: Scope, meta: ASTMetaData): Result[(String, Actual)] = {
+  def resolve(arg: Expr, outerScope: Scope, ctx: QueryContext): Result[(String, Actual)] = {
     for {
-      evaled <- arg.eval(outerScope, meta)
+      evaled <- arg.eval(outerScope, ctx)
       resolved <- resolve0.lift(evaled).map(key -> _).toRight(FunctionParamTypeError(this, arg))
     } yield resolved
   }
@@ -181,21 +181,21 @@ trait SIMQLFunction {
   val body: List[Bind]
   val returnExpr: Expr // TODO safe un function Expr
 
-  def apply(args: List[Expr], outerScope: Scope, meta: ASTMetaData): Result[Expr] = {
+  def apply(args: List[Expr], outerScope: Scope, ctx: QueryContext): Result[Expr] = {
     val resolvedArgs = params.zip(args).map { case (p, a) => p.key -> a }
     val argScope: Scope = resolvedArgs.map { case (k, v) => k -> new Variable(k, v, outerScope) }(collection.breakOut)
     val scope = outerScope ++ argScope
     for {
-      result <- apply0(scope, meta)
+      result <- apply0(scope, ctx)
     } yield result
   }
 
-  protected[this] def apply0(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+  protected[this] def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
     val binded = body.foldLeft(scope) {
-      case (acm, b) => b.bind2(acm, meta)
+      case (acm, b) => b.bind2(acm, ctx)
     }
     for {
-      result <- returnExpr.eval(binded, meta)
+      result <- returnExpr.eval(binded, ctx)
     } yield result
   }
 }
@@ -206,9 +206,9 @@ class Variable(val key: String, expr: Expr, outerScope: Scope) extends SIMQLFunc
   val body: List[Bind] = Nil
   val returnExpr: Expr = expr
 
-  override def apply0(scope: Scope, meta: ASTMetaData): Result[Expr] = {
+  override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
     for {
-      result <- returnExpr.eval(outerScope, meta)
+      result <- returnExpr.eval(outerScope, ctx)
     } yield result
   }
 }
@@ -219,16 +219,16 @@ object SIMQLFunction {
     for {
       _ <- Either.cond(f.args.length == defun.params.length, (), UnmatchArgLength())
       _ <- f.args.zip(defun.params).zipWithIndex.mapE {
-        case ((ff: FunctionCall, p), i) =>
-          checkFunctionCall(ff, scope).flatMap { ret =>
-            if (isSameType(ret, p)) Right(())
-            else Left(TypeError(f.symbol, i, ff.symbol, p))
+            case ((ff: FunctionCall, p), i) =>
+              checkFunctionCall(ff, scope).flatMap { ret =>
+                if (isSameType(ret, p)) Right(())
+                else Left(TypeError(f.symbol, i, ff.symbol, p))
+              }
+            case ((a, p), i) =>
+              val ret = FunctionReturnType.fromExpr(a, Map.empty)
+              if (isSameType(ret, p)) Right(())
+              else Left(TypeError(f.symbol, i, a.toString, p))
           }
-        case ((a, p), i) =>
-          val ret = FunctionReturnType.fromExpr(a, Map.empty)
-          if (isSameType(ret, p)) Right(())
-          else Left(TypeError(f.symbol, i, a.toString, p))
-      }
     } yield defun.returnType
   }
 
@@ -247,7 +247,7 @@ object SIMQLFunction {
     index: Int,
     found: String,
     require: FunctionParam)
-    extends SIMQLError
+      extends SIMQLError
   case class ReturnTypeError(found: FunctionReturnType, require: FunctionReturnType) extends SIMQLError
   case class UnmatchArgLength() extends SIMQLError
 }

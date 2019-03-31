@@ -16,9 +16,9 @@ trait ASTVisitor {
   def visitNumber(node: NumberLit): RE[NumberLit] = re { _ =>
     Right(node)
   }
-  def visitRaw(node: Raw): RE[Raw] = re { env =>
+  def visitRaw(node: Raw): RE[Raw] = re { ctx =>
     for {
-      args <- node.args.mapE(a => visitExpr(a).run(env))
+      args <- node.args.mapE(a => visitExpr(a).run(ctx))
     } yield node.copy(args = args)
   }
   def visitSymbol(node: SymbolLit): RE[SymbolLit] = re { _ =>
@@ -60,8 +60,8 @@ trait ASTVisitor {
   def visitFrom(node: From): RE[From] = {
     for {
       lhs <- visitExpr(node.lhs)
-      rhss <- re { env =>
-               node.rhss.mapE(n => visitJoin(n).run(env))
+      rhss <- re { ctx =>
+               node.rhss.mapE(n => visitJoin(n).run(ctx))
              }
     } yield
       node.copy(
@@ -72,8 +72,8 @@ trait ASTVisitor {
 
   def visitSelect(node: Select): RE[Select] = {
     for {
-      values <- re { env =>
-                 node.columns.toList.mapE(n => visitExpr(n).run(env))
+      values <- re { ctx =>
+                 node.columns.toList.mapE(n => visitExpr(n).run(ctx))
                }
     } yield {
       val h :: t = values
@@ -95,8 +95,8 @@ trait ASTVisitor {
   def visitLimitOffset(node: LimitOffset): RE[LimitOffset] = {
     for {
       limit <- visitNumber(node.limit)
-      offset <- re { env =>
-                 transpose { node.offset.map(n => visitNumber(n).run(env)) }
+      offset <- re { ctx =>
+                 transpose { node.offset.map(n => visitNumber(n).run(ctx)) }
                }
     } yield
       node.copy(
@@ -107,8 +107,8 @@ trait ASTVisitor {
 
   def visitOrder(node: Order): RE[Order] = {
     for {
-      columns <- re { env =>
-                  node.columns.toList.mapE(n => visitExpr(n).run(env))
+      columns <- re { ctx =>
+                  node.columns.toList.mapE(n => visitExpr(n).run(ctx))
                 }
     } yield {
       val h :: t = columns
@@ -121,17 +121,17 @@ trait ASTVisitor {
   def visit(node: Query): RE[Query] = {
     for {
       from <- visitFrom(node.from)
-      select <- re { env =>
-                 transpose { node.select.map(n => visitSelect(n).run(env)) }
+      select <- re { ctx =>
+                 transpose { node.select.map(n => visitSelect(n).run(ctx)) }
                }
-      where <- re { env =>
-                transpose { node.where.map(n => visitWhere(n).run(env)) }
+      where <- re { ctx =>
+                transpose { node.where.map(n => visitWhere(n).run(ctx)) }
               }
-      limitOffset <- re { env =>
-                      transpose { node.limitOffset.map(n => visitLimitOffset(n).run(env)) }
+      limitOffset <- re { ctx =>
+                      transpose { node.limitOffset.map(n => visitLimitOffset(n).run(ctx)) }
                     }
-      order <- re { env =>
-                transpose { node.order.map(n => visitOrder(n).run(env)) }
+      order <- re { ctx =>
+                transpose { node.order.map(n => visitOrder(n).run(ctx)) }
               }
     } yield
       node.copy(
@@ -146,7 +146,7 @@ trait ASTVisitor {
 object ASTVisitor {
   import cats.data.Kleisli
   // Reader Either
-  type RE[A] = Kleisli[Result, ASTMetaData, A]
-  def re[A](f: ASTMetaData => Result[A]): RE[A] =
-    Kleisli[Result, ASTMetaData, A](f)
+  type RE[A] = Kleisli[Result, QueryContext, A]
+  def re[A](f: QueryContext => Result[A]): RE[A] =
+    Kleisli[Result, QueryContext, A](f)
 }

@@ -22,16 +22,16 @@ object Module {
   private[this] def parseAndResolve(query: String): Result[Query] = {
     for {
       ast <- Parser.parseSimql(query).toRight(UnhandleError("failed parse."))
-      meta <- makeMetadata(ast)
+      meta <- makeContext(ast)
       _ <- queryChecker.mapE(_.check(ast, meta))
       resolved <- resolvers.foldE(ast) { case (before, resolver) => resolver.resolve(before, meta) }
     } yield resolved
   }
 
-  private[this] def makeMetadata(ast: Query): Result[ASTMetaData] = {
-    val env = ASTMetaData.empty
+  private[this] def makeContext(ast: Query): Result[QueryContext] = {
+    val ctx = QueryContext.empty
 
-    val analyzed = analyzer.analyze(ast, env)
+    val analyzed = analyzer.analyze(ast, ctx)
     for {
       predef <- DefinitionModule.loadPredef()
       buildin = me.kerfume.simql.defun.buildin.functions

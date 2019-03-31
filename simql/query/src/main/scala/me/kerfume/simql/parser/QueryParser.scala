@@ -120,10 +120,10 @@ trait QueryParser { self: JavaTokenParsers with CoreParser =>
   }
 
   def functionCall: Parser[FunctionCall] =
-    """\$[a-zA-Z][a-zA-Z0-9_]*""".r ~ opt( "("~>(opt(expr~rep("," ~> expr)))<~")" ) ^^ {
+    """\$[a-zA-Z][a-zA-Z0-9_]*""".r ~ opt("(" ~> (opt(expr ~ rep("," ~> expr))) <~ ")") ^^ {
       case s ~ as =>
         val symbol = s.tail
-        val args = as.flatten.toList.flatMap { case h~t => h :: t }
+        val args = as.flatten.toList.flatMap { case h ~ t => h :: t }
         FunctionCall(symbol, args)
     }
 }

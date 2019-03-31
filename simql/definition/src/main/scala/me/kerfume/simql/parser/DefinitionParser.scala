@@ -31,7 +31,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
 
   def dterm: Parser[Expr] = string | number | symbol | functionCall
   def queryBlock: Parser[Expr] = "q{" ~> expr <~ "}"
-  def dexpr: Parser[Expr] =  queryBlock | dterm
+  def dexpr: Parser[Expr] = queryBlock | dterm
 
   def bind: Parser[Bind] = ("let" ~> symbol) ~ ("=" ~> dexpr) ^^ {
     case s ~ e =>
@@ -39,10 +39,12 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
   }
 
   def defun: Parser[SIMQLFunction] =
-    ("defun" ~> symbol) ~ ("(" ~> opt(functionParam~rep(","~>functionParam)) <~ ")") ~ ("=>" ~> functionReturnType <~ "{") ~ (rep(bind) ~ dexpr <~ "}") ^^ {
+    ("defun" ~> symbol) ~ ("(" ~> opt(functionParam ~ rep("," ~> functionParam)) <~ ")") ~ ("=>" ~> functionReturnType <~ "{") ~ (rep(
+      bind
+    ) ~ dexpr <~ "}") ^^ {
       case s ~ ps ~ retType ~ block =>
         val bd ~ retNode = block
-        val paramList = ps.toList.flatMap { case h~t => h :: t }
+        val paramList = ps.toList.flatMap { case h ~ t => h :: t }
 
         new SIMQLFunction {
           val key = s.label

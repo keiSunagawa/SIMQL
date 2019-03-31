@@ -4,5 +4,5 @@ import me.kerfume.simql._
 import me.kerfume.simql.node._
 
 trait Analyzer {
-  def analyze(ast: Query, meta: ASTMetaData): ASTMetaData
+  def analyze(ast: Query, ctx: QueryContext): QueryContext
 }

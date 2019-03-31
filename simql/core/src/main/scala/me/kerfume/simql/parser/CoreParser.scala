@@ -12,5 +12,5 @@ trait CoreParser { self: JavaTokenParsers =>
     val value = BigDecimal(s)
     NumberLit(value)
   }
-  def symbol: Parser[SymbolLit] = """[a-zA-Z][a-zA-Z0-9_]*""".r ^^ { SymbolLit(_) }
+  def symbol: Parser[SymbolLit] = """[a-zA-Z][a-zA-Z0-9_\.]*""".r ^^ { SymbolLit(_) }
 }

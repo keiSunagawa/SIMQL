@@ -12,10 +12,10 @@ object FunctionResolveVisitor extends ASTVisitor {
 
   override def visitExpr(node: Expr): RE[Expr] = node match {
     case f: FunctionCall =>
-      re { env =>
-        env.globalScope.get(f.symbol) match {
+      re { ctx =>
+        ctx.globalScope.get(f.symbol) match {
           case Some(sf) =>
-            sf.apply(f.args, env.globalScope, env)
+            sf.apply(f.args, ctx.globalScope, ctx)
           case None => Left(FunctionNotFound(f.symbol))
         }
 

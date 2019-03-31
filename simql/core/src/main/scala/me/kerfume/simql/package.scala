@@ -13,9 +13,9 @@ package object simql {
   case class UnhandleError(msg: String) extends GlobalError
 
   // plane DTO
-  case class ASTMetaData(tables: List[Expr], globalScope: Scope, target: TranspileTarget) // need to global scope?
-  object ASTMetaData {
-    val empty = ASTMetaData(Nil, Map.empty, TranspileTarget.MySQL)
+  case class QueryContext(tables: Vector[SymbolLit], globalScope: Scope, target: TranspileTarget) // need to global scope?
+  object QueryContext {
+    val empty = QueryContext(Vector.empty, Map.empty, TranspileTarget.MySQL)
   }
   sealed trait TranspileTarget
   object TranspileTarget {

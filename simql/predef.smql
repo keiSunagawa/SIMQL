@@ -5,12 +5,13 @@ define {
     let num3 = $add($num2, 1)
     $num3
   }
-  defun cst(str1: String, str2: String) => String {
-    $str1
+  defun table_access(col: Symbol, index: Number) => Symbol {
+    let tbl = $ctx_get_table($index)
+    let accessor = $concat_symbol($tbl, $single_dot)
+    $concat_symbol($accessor, $col)
   }
   defun concat(str1: String, str2: String) => Expr {
     let res = q{ 3 }
-    let res3 = $cst("aa", "bb")
     let res2 = $add($res, $res)
     q{ $res2 == 5 }
   }
