@@ -26,7 +26,7 @@ object MySQLGenerator extends Generator {
       case n: NumberLit        => numberToSQL(n)
       case n: SymbolLit        => symbolToSQL(n)
       case NullLit             => nullToSQL()
-      case f: FunctionCall     => throw new RuntimeException(s"unresolve function call found. ${f.symbol}")
+      case f: Call             => throw new RuntimeException(s"unresolve function call found. ${f.symbol}")
     }
 
     def opToSQL(node: Op): String = node.op match {

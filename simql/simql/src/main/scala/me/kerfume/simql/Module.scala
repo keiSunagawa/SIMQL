@@ -23,8 +23,8 @@ object Module {
     for {
       ast <- Parser.parseSimql(query).toRight(UnhandleError("failed parse."))
       meta <- makeContext(ast)
-      _ <- queryChecker.mapE(_.check(ast, meta))
       resolved <- resolvers.foldE(ast) { case (before, resolver) => resolver.resolve(before, meta) }
+      _ <- queryChecker.mapE(_.check(resolved, meta))
     } yield resolved
   }
 
@@ -39,9 +39,8 @@ object Module {
       gscope <- (predef ++ userdef).foldE(buildin) {
                  case (s, f) =>
                    for {
-                     _ <- (new RefChecker).check(f, s.map { case (key, _) => key -> () })
                      _ <- (new TypeChecker).check(f, s)
-                   } yield s + (f.key -> f)
+                   } yield s + (f.key -> Pure(f))
                }
     } yield
       analyzed.copy(
@@ -55,7 +54,6 @@ object Module {
     new FunctionResolver // FIXME function double for null resolver...
   )
   private[this] val queryChecker: List[QueryChecker] = List(
-    new FunctionCallChecker,
     new LocationChecker
   )
 }
@@ -63,11 +61,11 @@ object Module {
 object DefinitionModule {
   import scala.io.Source
 
-  def loadPredef(): Result[List[SIMQLFunction]] = {
+  def loadPredef(): Result[List[UserFunction]] = {
     val code = Source.fromFile("predef.smql", "UTF-8").getLines.mkString("\n")
     Parser.parseDefinition(code).toRight(UnhandleError("failed parse."))
   }
-  def loadUserdef(): Result[List[SIMQLFunction]] = {
+  def loadUserdef(): Result[List[UserFunction]] = {
     val code = Source.fromFile("userdef.smql", "UTF-8").getLines.mkString("\n")
     Parser.parseDefinition(code).toRight(UnhandleError("failed parse."))
   }

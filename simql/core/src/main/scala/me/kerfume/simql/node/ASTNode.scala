@@ -4,34 +4,102 @@ import me.kerfume.simql._
 import me.kerfume.simql.types._
 import me.kerfume.simql.functions._
 import cats.instances.list._
+import SIMQLFunction._
 
 sealed trait ASTNode
 sealed trait FunctionAST extends ASTNode
 sealed trait QueryAST extends ASTNode
-sealed trait EvalNode { self: FunctionAST =>
-  def eval(scope: Scope, ctx: QueryContext): Result[Expr]
-}
-trait Leaf { self: EvalNode with Expr =>
+
+sealed trait Atomic extends Expr {
   def eval(scope: Scope, ctx: QueryContext): Result[Expr] = Right(this)
 }
 
-sealed trait Expr extends QueryAST with FunctionAST with EvalNode
+case class StringLit(value: String) extends Atomic {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = Right(StringType)
+}
+case class NumberLit(value: BigDecimal) extends Atomic {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = Right(NumberType)
+}
+case object NullLit extends Atomic {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = ??? // TODO
+}
+case class SymbolLit(label: String) extends Atomic {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = Right(SymbolType)
+}
 
-case class FunctionCall(symbol: String, args: List[Expr]) extends QueryAST with FunctionAST with Expr {
+sealed trait Expr extends QueryAST with FunctionAST {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType]
+  def eval(scope: Scope, ctx: QueryContext): Result[Expr]
+}
+
+case class Call(symbol: String, args: List[Expr]) extends QueryAST with FunctionAST with Expr {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = {
+    for {
+      typeArgs <- args.mapE(_.typeCheck(scope, paramMap))
+      tpe <- scope
+              .get(symbol)
+              .map { f =>
+                for {
+                  res <- f match {
+                          case v: Thunk => v.typeCheck(paramMap)
+                          case v: Pure  => v.typeCheck(scope, paramMap)
+                        }
+                  res2 <- res match {
+                           case f: FunctionType =>
+                             for {
+                               _ <- Either.cond(typeArgs.nonEmpty, (), UnhandleError("function require to args."))
+                               ret <- typeArgs.foldE[SIMQLError, SIMQLType](f) {
+                                       case (tpe, arg) =>
+                                         tpe match {
+                                           case f: FunctionType =>
+                                             val f2 = if (f.paramType == Generics) {
+                                               f.resolveGenerics(arg)
+                                             } else f
+                                             Either.cond(
+                                               f2.paramType.isSameType(arg),
+                                               f2.returnType,
+                                               UnhandleError(
+                                                 s"unmatch args type. key: $symbol, found: ${arg}, require: ${f2.paramType}"
+                                               )
+                                             )
+                                           case _ => Left(UnhandleError("args to many."))
+                                         }
+                                     }
+                             } yield ret
+                           case _ => Either.cond(typeArgs.isEmpty, res, UnhandleError("var not apply args."))
+                         }
+                } yield res2
+              }
+              .orElse(paramMap.get(symbol).map(Right(_)))
+              .toRight(FunctionNotFound(symbol))
+              .flatMap(identity) // ひどい…
+    } yield {
+      tpe match {
+        case Generics =>
+          println(s"== ret generics to $symbol ==")
+          tpe
+        case other => other
+      }
+    }
+  }
 
   override def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
     for {
       f <- scope.get(symbol).toRight(FunctionNotFound(symbol))
-      res <- f(args, scope, ctx)
+      invalue <- f match {
+                  case v: Thunk => v.eval(ctx)
+                  case v: Pure  => v.eval(scope, ctx)
+                }
+      res <- invalue match {
+              case ff: SIMQLFunction => ff.apply(args.map(Thunk(_, scope)), ctx)
+              case other             => Right(other)
+            }
     } yield res
   }
 }
 
-case class StringLit(value: String) extends Expr with Leaf
-case class NumberLit(value: BigDecimal) extends Expr with Leaf
-case object NullLit extends Expr with Leaf
-case class SymbolLit(label: String) extends Expr with Leaf
 case class Raw(sql: String, args: List[Expr]) extends Expr {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = Right(RawType)
   def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
     for {
       evaled <- args.mapE(_.eval(scope, ctx))
@@ -46,6 +114,12 @@ case class Op(op: ExprOp.Op) extends QueryAST
 
 // resolved operation priority. by making syntax tree.
 case class BExpr(lhs: Expr, op: Op, rhs: Expr) extends Expr {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] =
+    for {
+      _ <- lhs.typeCheck(scope, paramMap)
+      _ <- rhs.typeCheck(scope, paramMap)
+    } yield ExprType
+
   def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
     for {
       evaledLhs <- lhs.eval(scope, ctx)
@@ -59,6 +133,7 @@ case class BExpr(lhs: Expr, op: Op, rhs: Expr) extends Expr {
 }
 
 case class RBracket(expr: Expr) extends Expr {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = expr.typeCheck(scope, paramMap).map(_ => ExprType)
   def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
     for {
       evaled <- expr.eval(scope, ctx)
@@ -115,160 +190,135 @@ object OrderType {
 
 // for function ast
 case class Bind(symbol: String, value: Expr) extends FunctionAST {
-  private[this] def caseEval(scope: Scope, ctx: QueryContext): Unit =
-    value match { // FIXME: unsafe and known eval function by Bind class
-      case f: FunctionCall =>
-        if (f.symbol == "eval") {
-          f.eval(scope, ctx)
-        }
-      case _ => ()
-    }
   def bind(scope: Scope, ctx: QueryContext): Scope = {
-    caseEval(scope, ctx)
-    scope + (symbol -> new Variable(symbol, value, scope))
+    scope + (symbol -> Thunk(value, scope))
   }
 }
 
-sealed trait FunctionParam {
+sealed trait Value {
+  val value: Expr
+  protected[this] def typeCheck0(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = value.typeCheck(scope, paramMap)
+  protected[this] def eval0(scope: Scope, ctx: QueryContext): Result[Expr] = value.eval(scope, ctx)
+}
+case class Thunk(value: Expr, scope: Scope) extends Value {
+  def typeCheck(paramMap: TypeMap): Result[SIMQLType] = {
+    typeCheck0(scope, paramMap)
+  }
+  def eval(ctx: QueryContext): Result[Expr] = eval0(scope, ctx)
+}
+case class Pure(value: Expr) extends Value {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = typeCheck0(scope, paramMap)
+  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = eval0(scope, ctx)
+}
+sealed trait SIMQLType {
+  val subType: List[SIMQLType] = Nil
+  def isSameType(that: SIMQLType): Boolean = this == that || subType.contains(that) // || that == Generics
+}
+sealed trait ElemType extends SIMQLType
+case object StringType extends ElemType
+case object BooleanType extends ElemType
+case object SymbolType extends ElemType
+case object NumberType extends ElemType
+case object RawType extends ElemType
+case object ExprType extends ElemType {
+  override val subType = List(StringType, BooleanType, SymbolType, NumberType, RawType)
+}
+case class FunctionType(paramType: SIMQLType, returnType: SIMQLType) extends SIMQLType {
+  def resolveGenerics(tpe: SIMQLType): FunctionType = tpe match {
+    case Generics => throw new RuntimeException("invalid input can't resolve generics in Generics")
+    case other =>
+      val param = if (paramType == Generics) other else Generics
+      val ret = returnType match {
+        case Generics        => other
+        case f: FunctionType => f.resolveGenerics(other)
+        case _               => other
+      }
+      FunctionType(param, ret)
+  }
+}
+case object Generics extends SIMQLType {
+  override def isSameType(that: SIMQLType): Boolean = true
+}
+import SIMQLFunction._
+
+trait SIMQLFunction extends Atomic { self =>
   val key: String
-  val tpe: FunctionReturnType
-  type Actual <: Expr
+  val param: FunctionParam
+  val returnType: SIMQLType
+  val outerScope: Scope
 
-  def resolve0: PartialFunction[Expr, Actual]
-  def resolve(arg: Expr, outerScope: Scope, ctx: QueryContext): Result[(String, Actual)] = {
-    for {
-      evaled <- arg.eval(outerScope, ctx)
-      resolved <- resolve0.lift(evaled).map(key -> _).toRight(FunctionParamTypeError(this, arg))
-    } yield resolved
-  }
-}
-case class StringParam(key: String) extends FunctionParam {
-  override type Actual = StringLit
-  val tpe = StringType
-  def resolve0 = { case e: StringLit => e }
-}
-case class NumberParam(key: String) extends FunctionParam {
-  override type Actual = NumberLit
-  val tpe = NumberType
-  def resolve0 = { case e: NumberLit => e }
-}
-case class SymbolParam(key: String) extends FunctionParam {
-  override type Actual = SymbolLit
-  val tpe = SymbolType
-  def resolve0 = { case e: SymbolLit => e }
-}
-case class RawParam(key: String) extends FunctionParam {
-  override type Actual = Raw
-  val tpe = RawType
-  def resolve0 = { case e: Raw => e }
-}
-case class ExprParam(key: String) extends FunctionParam { // pend implements
-  override type Actual = Expr
-  val tpe = ExprType
-  def resolve0 = { case e: Expr => e }
-}
-
-sealed trait FunctionReturnType {
-  def isAllowed(that: FunctionReturnType): Boolean
-}
-trait LeafType { self: FunctionReturnType =>
-  def isAllowed(that: FunctionReturnType): Boolean = that == this
-}
-case object StringType extends FunctionReturnType with LeafType
-case object NumberType extends FunctionReturnType with LeafType
-case object SymbolType extends FunctionReturnType with LeafType
-case object RawType extends FunctionReturnType with LeafType
-case object ExprType extends FunctionReturnType {
-  def isAllowed(that: FunctionReturnType): Boolean = that match {
-    case StringType | NumberType | SymbolType | RawType | ExprType => true
-  }
-}
-object FunctionReturnType {
-  def fromExpr(expr: Expr, scope: Scope): FunctionReturnType = expr match {
-    case _: StringLit    => StringType
-    case _: NumberLit    => NumberType
-    case _: SymbolLit    => SymbolType
-    case _: Raw          => RawType
-    case f: FunctionCall => scope(f.symbol).returnType
-    case _: Expr         => ExprType
-  }
-}
-
-trait SIMQLFunction {
-  val key: String
-  val params: List[FunctionParam]
-  val returnType: FunctionReturnType
   val body: List[Bind]
-  val returnExpr: Expr // TODO safe un function Expr
+  val returnValue: Expr
 
-  def apply(args: List[Expr], outerScope: Scope, ctx: QueryContext): Result[Expr] = {
-    val resolvedArgs = params.zip(args).map { case (p, a) => p.key -> a }
-    val argScope: Scope = resolvedArgs.map { case (k, v) => k -> new Variable(k, v, outerScope) }(collection.breakOut)
-    val scope = outerScope ++ argScope
-    for {
-      result <- apply0(scope, ctx)
-    } yield result
+  def setOuterScope(scope: Scope): SIMQLFunction = new SIMQLFunction {
+    override val key: String = self.key
+    override val param: FunctionParam = self.param
+    override val returnType: SIMQLType = self.returnType
+    override val outerScope: Scope = self.outerScope ++ scope
+    override val body: List[Bind] = self.body
+    override val returnValue: Expr = self.returnValue
+
+    override def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr] =
+      self.apply0(scope, ctx, nextArgs)
+
+    override def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = self.typeCheck(scope, paramMap)
   }
 
-  protected[this] def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
+  final def apply(args: List[Value], ctx: QueryContext): Result[Expr] = {
+    for {
+      arg <- args.headOption.toRight(UnhandleError(s"args empty. key: $key"))
+      scope = ctx.globalScope ++ outerScope + (param.name -> arg)
+      res <- apply0(scope, ctx, args.tail)
+    } yield res
+  }
+
+  def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr]
+}
+
+trait UserFunction extends SIMQLFunction {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = {
+    val paramMap2 = paramMap + (param.name -> param.tpe)
+    val lscope = scope ++ outerScope
+    for {
+      binded <- body.foldE[SIMQLError, TypeMap](paramMap2) {
+                 case (acm, b) =>
+                   b.value.typeCheck(lscope, acm).map(tpe => acm + (b.symbol -> tpe))
+               }
+      tpe <- returnValue.typeCheck(scope, binded)
+      _ <- Either.cond(returnType.isSameType(tpe), (), UnhandleError("function return type error"))
+    } yield FunctionType(param.tpe, returnType)
+  }
+
+  def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr] = {
     val binded = body.foldLeft(scope) {
       case (acm, b) => b.bind(acm, ctx)
     }
-    for {
-      result <- returnExpr.eval(binded, ctx)
-    } yield result
-  }
-}
-
-class Variable(val key: String, expr: Expr, outerScope: Scope) extends SIMQLFunction {
-  val params: List[FunctionParam] = Nil
-  val returnType: FunctionReturnType = FunctionReturnType.fromExpr(expr, outerScope)
-  val body: List[Bind] = Nil
-  val returnExpr: Expr = expr
-
-  override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
-    for {
-      result <- returnExpr.eval(outerScope, ctx)
-    } yield result
-  }
-}
-
-object SIMQLFunction {
-  def checkFunctionCall(f: FunctionCall, scope: Scope): Result[FunctionReturnType] = {
-    val defun = scope(f.symbol)
-    for {
-      _ <- Either.cond(f.args.length == defun.params.length, (), UnmatchArgLength())
-      _ <- f.args.zip(defun.params).zipWithIndex.mapE {
-            case ((ff: FunctionCall, p), i) =>
-              checkFunctionCall(ff, scope).flatMap { ret =>
-                if (isSameType(ret, p)) Right(())
-                else Left(TypeError(f.symbol, i, ff.symbol, p))
-              }
-            case ((a, p), i) =>
-              val ret = FunctionReturnType.fromExpr(a, Map.empty)
-              if (isSameType(ret, p)) Right(())
-              else Left(TypeError(f.symbol, i, a.toString, p))
-          }
-    } yield defun.returnType
-  }
-
-  private[this] def isSameType(arg: FunctionReturnType, param: FunctionParam): Boolean = {
-    (arg, param) match {
-      case (StringType, _: StringParam) => true
-      case (NumberType, _: NumberParam) => true
-      case (SymbolType, _: SymbolParam) => true
-      case (RawType, _: Raw)            => true
-      case (_, _: ExprParam)            => true
-      case _                            => false
+    returnValue.eval(binded, ctx).flatMap {
+      case next: SIMQLFunction =>
+        if (nextArgs.nonEmpty) next.setOuterScope(binded)(nextArgs, ctx)
+        else Right(next)
+      case other => Right(other)
     }
   }
+}
 
-  case class TypeError(
-    fname: String,
-    index: Int,
-    found: String,
-    require: FunctionParam)
-      extends SIMQLError
-  case class ReturnTypeError(key: String, found: FunctionReturnType, require: FunctionReturnType) extends SIMQLError
+case class Closure(
+  key: String = "__anonymous",
+  param: FunctionParam,
+  body: List[Bind],
+  returnType: SIMQLType,
+  returnValue: Expr,
+  outerScope: Scope = Map.empty)
+    extends UserFunction
+
+object SIMQLFunction {
+  case class FunctionParam(name: String, tpe: SIMQLType)
+  type TypeMap = Map[String, SIMQLType]
+
+  type CheckScope = Map[String, SIMQLType]
+  case class DefunType(params: Seq[SIMQLType], ret: SIMQLType)
+
+  case class TypeError(fname: String, found: SIMQLType, require: SIMQLType) extends SIMQLError
+  case class ReturnTypeError(key: String, found: SIMQLType, require: SIMQLType) extends SIMQLError
   case class UnmatchArgLength() extends SIMQLError
 }

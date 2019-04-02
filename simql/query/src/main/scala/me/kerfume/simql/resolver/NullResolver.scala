@@ -16,7 +16,7 @@ object NullResolveVisitor extends ASTVisitor {
       for {
         resLhs <- visitExpr(lhs)
         resRhs <- visitExpr(rhs)
-      } yield if (op == ExprOp.EQ) FunctionCall("is_null", List(resLhs)) else FunctionCall("is_not_null", List(resLhs))
+      } yield if (op == ExprOp.EQ) Call("is_null", List(resLhs)) else Call("is_not_null", List(resLhs))
     case other => super.visitExpr(other)
   }
 }

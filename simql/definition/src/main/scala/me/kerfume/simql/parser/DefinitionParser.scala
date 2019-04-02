@@ -1,35 +1,19 @@
 package me.kerfume.simql.parser
 
-import me.kerfume.simql.checker._
-
 import scala.util.parsing.combinator.JavaTokenParsers
 import me.kerfume.simql.node._
+import me.kerfume.simql.node.SIMQLFunction._
 
 trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser =>
-  def functionType: Parser[syntax.FType] = "(String|Number|Symbol|Expr|Raw)".r ^^ {
-    case "String" => syntax.StringType
-    case "Number" => syntax.NumberType
-    case "Symbol" => syntax.SymbolType
-    case "Raw"    => syntax.RawType
-    case "Expr"   => syntax.ExprType
+  def functionType: Parser[SIMQLType] = "(String|Number|Symbol|Expr|Raw)".r ^^ {
+    case "String" => StringType
+    case "Number" => NumberType
+    case "Symbol" => SymbolType
+    case "Raw"    => RawType
+    case "Expr"   => ExprType
   }
   def functionParam: Parser[FunctionParam] = (symbol <~ ":") ~ functionType ^^ {
-    case s ~ tpe =>
-      tpe match {
-        case syntax.StringType => StringParam(s.label)
-        case syntax.NumberType => NumberParam(s.label)
-        case syntax.SymbolType => SymbolParam(s.label)
-        case syntax.RawType    => RawParam(s.label)
-        case syntax.ExprType   => ExprParam(s.label)
-      }
-  }
-
-  def functionReturnType: Parser[FunctionReturnType] = functionType ^^ {
-    case syntax.StringType => StringType
-    case syntax.NumberType => NumberType
-    case syntax.SymbolType => SymbolType
-    case syntax.RawType    => RawType
-    case syntax.ExprType   => ExprType
+    case s ~ tpe => FunctionParam(s.label, tpe)
   }
 
   def dterm: Parser[Expr] = string | number | symbol | functionCall
@@ -41,24 +25,26 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
       Bind(s.label, e)
   }
 
-  def defun: Parser[SIMQLFunction] =
-    ("defun" ~> symbol) ~ ("(" ~> opt(functionParam ~ rep("," ~> functionParam)) <~ ")") ~ ("=>" ~> functionReturnType <~ "{") ~ (rep(
+  def defun: Parser[UserFunction] = // TODO paramは一つ以上
+    ("defun" ~> symbol) ~ ("(" ~> opt(functionParam ~ rep("," ~> functionParam)) <~ ")") ~ ("=>" ~> functionType <~ "{") ~ (rep(
       bind
     ) ~ dexpr <~ "}") ^^ {
       case s ~ ps ~ retType ~ block =>
         val bd ~ retNode = block
-        val paramList = ps.toList.flatMap { case h ~ t => h :: t }
+        val pList = ps.toList.flatMap { case h ~ t => h :: t }
+        val plast = pList.last
+        val pInit = pList.init
 
-        new SIMQLFunction {
-          val key = s.label
-          val params = paramList
-          val returnType = retType
-          val body = bd
-          val returnExpr = retNode
+        val last = Closure(key = s.label, param = plast, returnType = retType, body = bd, returnValue = retNode)
+
+        pInit.foldRight(last) {
+          case (p, next) =>
+            val nextType = FunctionType(next.param.tpe, next.returnType)
+            Closure(key = s.label, param = p, returnType = nextType, body = Nil, returnValue = next)
         }
     }
 
-  def definitionBlock: Parser[List[SIMQLFunction]] = "define" ~> "{" ~> rep(defun) <~ "}"
+  def definitionBlock: Parser[List[UserFunction]] = "define" ~> "{" ~> rep(defun) <~ "}"
 }
 
 object DefinitionParser extends JavaTokenParsers with DefinitionParser with CoreParser with QueryParser

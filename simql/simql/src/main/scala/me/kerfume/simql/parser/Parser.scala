@@ -16,7 +16,7 @@ object Parser extends JavaTokenParsers with CoreParser with DefinitionParser wit
       None
   }
 
-  def parseDefinition(code: String): Option[List[SIMQLFunction]] = parse(definitionBlock, code) match {
+  def parseDefinition(code: String): Option[List[UserFunction]] = parse(definitionBlock, code) match {
     case Success(root, a) if (a.atEnd) => Some(root)
     // TODO dump error detail
     case Success(root, r) =>

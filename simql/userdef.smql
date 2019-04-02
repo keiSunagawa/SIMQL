@@ -3,8 +3,7 @@ define {
     let x = 3
     let num2 = $add($num1, 1)
     let num3 = $add($num2, 1)
-    let dbg = $eval($debug($num3))
-    $num3
+    $dbg($num3)
   }
   defun sub_type_test(n: Number) => Expr {
     $n

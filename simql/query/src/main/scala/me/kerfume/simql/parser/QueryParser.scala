@@ -20,7 +20,7 @@ trait QueryParser { self: JavaTokenParsers with CoreParser =>
   def column: Parser[Expr] = opt("""\$[0-9]""".r <~ ".") ~ symbol ^^ {
     case accessor ~ s =>
       accessor match {
-        case Some(ac) => FunctionCall("table_access", List(s, NumberLit(ac.tail.toInt)))
+        case Some(ac) => Call("table_access", List(s, NumberLit(ac.tail.toInt)))
         case None     => s
       }
   }
@@ -119,12 +119,12 @@ trait QueryParser { self: JavaTokenParsers with CoreParser =>
       Query(f, s, w, l, o)
   }
 
-  def functionCall: Parser[FunctionCall] =
+  def functionCall: Parser[Call] =
     """\$[a-zA-Z][a-zA-Z0-9_]*""".r ~ opt("(" ~> (opt(expr ~ rep("," ~> expr))) <~ ")") ^^ {
       case s ~ as =>
         val symbol = s.tail
         val args = as.flatten.toList.flatMap { case h ~ t => h :: t }
-        FunctionCall(symbol, args)
+        Call(symbol, args)
     }
 }
 

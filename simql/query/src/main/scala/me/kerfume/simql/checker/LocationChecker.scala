@@ -58,16 +58,21 @@ object LocationCheckVisitor extends ASTVisitor {
     case _: Raw       =>
   }
   private[this] def isAllowedType(expr: Expr, scope: Scope)(allowedTo: PartialFunction[Expr, Unit]): Boolean = {
-    def convert(tpe: FunctionReturnType): Expr = tpe match {
+    def convert(tpe: SIMQLType): Expr = tpe match {
       case StringType => StringLit("")
       case NumberType => NumberLit(0)
       case SymbolType => SymbolLit("")
       case RawType    => Raw("", Nil)
       case ExprType   => BExpr(NullLit, Op(ExprOp.EQ), NullLit)
+      case _          => throw new RuntimeException("unhandle type with Location")
     }
     expr match {
-      case f: FunctionCall =>
-        val retType = scope(f.symbol) |> (sf => convert(sf.returnType))
+      case f: Call =>
+        val retType = scope(f.symbol) |> {
+          case uf: UserFunction => convert(uf.returnType)
+          case Thunk(v, s)      => v // TODO
+          case Pure(v)          => v
+        }
         allowedTo.isDefinedAt(retType)
       case other =>
         allowedTo.isDefinedAt(other)

@@ -1,129 +1,126 @@
 package me.kerfume.simql.defun
 
 import me.kerfume.simql._
+import me.kerfume.simql.node.SIMQLFunction._
 import me.kerfume.simql.node._
 
 object buildin {
+  val functions: Scope = (calc.values ++ context.values ++ develop.values)
+    .map(f => f.key -> Pure(f))
+    .toMap ++ constants.values
+
   trait BuildInFunction extends SIMQLFunction {
     val body: List[Bind] = Nil
-    val returnExpr: Expr = NullLit
+    val returnValue: Expr = NullLit
+    val outerScope: Scope = Map.empty
 
-    def getArg[T <: Expr](key: String, scope: Scope, ctx: QueryContext): T =
-      scope(key)(Nil, scope, ctx).right.get.asInstanceOf[T]
+    protected[this] def getArg[T <: Expr](key: String, scope: Scope, ctx: QueryContext): T = {
+      def valueMatch(value: Value): T = {
+        value match {
+          case v: Thunk =>
+            v.eval(ctx).right.get.asInstanceOf[T]
+          case v: Pure =>
+            v.eval(scope, ctx).right.get.asInstanceOf[T]
+        }
+      }
+      valueMatch(scope(key))
+    }
   }
+
+  private[this] def makeBuildInFunction(
+    name: String,
+    args: List[FunctionParam],
+    implReturnType: SIMQLType
+  )(
+    _apply: (Scope, QueryContext) => Result[Expr]
+  ): SIMQLFunction = {
+    val impl = new BuildInFunction {
+      override val key: String = name
+      override val param: FunctionParam = args.last
+      override val returnType: SIMQLType = implReturnType
+
+      override def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr] = _apply(scope, ctx)
+
+      override def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] =
+        Right(FunctionType(this.param.tpe, this.returnType))
+    }
+    args.init.foldRight[SIMQLFunction](impl) {
+      case (p, next) =>
+        val nextType = FunctionType(next.param.tpe, next.returnType)
+        Closure(key = name, param = p, returnType = nextType, body = Nil, returnValue = next)
+    }
+  }
+
+  private[this] def getArg[T <: Expr](key: String, scope: Scope, ctx: QueryContext): T = {
+    def valueMatch(value: Value): T = {
+      value match {
+        case v: Thunk =>
+          v.eval(ctx).right.get.asInstanceOf[T] // TODO left時のエラーハンドリング
+        case v: Pure =>
+          v.eval(scope, ctx).right.get.asInstanceOf[T] // TODO left時のエラーハンドリング
+      }
+    }
+    valueMatch(scope(key))
+  }
+
   object calc {
+    private[this] def binaryArithmetic(name: String)(_apply: (BigDecimal, BigDecimal) => BigDecimal): SIMQLFunction =
+      makeBuildInFunction(name, List(FunctionParam("a", NumberType), FunctionParam("b", NumberType)), NumberType) {
+        (scope, ctx) =>
+          val a = getArg[NumberLit]("a", scope, ctx).value
+          val b = getArg[NumberLit]("b", scope, ctx).value
+          Right(NumberLit(_apply(a, b)))
+      }
+    val Add = binaryArithmetic("add")(_ + _)
+    val Sub = binaryArithmetic("sub")(_ - _)
+    val Mul = binaryArithmetic("mul")(_ * _)
+    val Div = binaryArithmetic("div") { (a, b) =>
+      if (b != 0) a / b else 0
+    }
+
+    val ConcatString =
+      makeBuildInFunction("cst", List(FunctionParam("a", StringType), FunctionParam("b", StringType)), StringType) {
+        (scope, ctx) =>
+          val a = getArg[StringLit]("a", scope, ctx).value
+          val b = getArg[StringLit]("b", scope, ctx).value
+          Right(StringLit(a + b))
+      }
+
+    val ConcatSymbol =
+      makeBuildInFunction("csm", List(FunctionParam("a", SymbolType), FunctionParam("b", SymbolType)), SymbolType) {
+        (scope, ctx) =>
+          val a = getArg[SymbolLit]("a", scope, ctx).label
+          val b = getArg[SymbolLit]("b", scope, ctx).label
+          Right(SymbolLit(a + b))
+      }
+
     val values = List(Add, Sub, Mul, Div, ConcatString, ConcatSymbol)
-
-    trait BinaryArithmetic extends BuildInFunction {
-      protected[this] val calc: (BigDecimal, BigDecimal) => BigDecimal
-
-      val params: List[FunctionParam] = List(NumberParam("a"), NumberParam("b"))
-      val returnType: FunctionReturnType = NumberType
-
-      override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
-        val a = getArg[NumberLit]("a", scope, ctx).value
-        val b = getArg[NumberLit]("b", scope, ctx).value
-        Right(NumberLit(calc(a, b)))
-      }
-    }
-    object Add extends BinaryArithmetic {
-      val key: String = "add"
-      val calc = (_ + _)
-    }
-    object Sub extends BinaryArithmetic {
-      val key: String = "sub"
-      val calc = (_ - _)
-    }
-    object Mul extends BinaryArithmetic {
-      val key: String = "mul"
-      val calc = (_ * _)
-    }
-    object Div extends BinaryArithmetic {
-      val key: String = "div"
-      val calc = { (a, b) =>
-        if (b != 0) a / b else 0
-      }
-    }
-    object ConcatString extends BuildInFunction {
-      val key: String = "concat_string"
-      val params: List[FunctionParam] = List(StringParam("a"), StringParam("b"))
-      val returnType: FunctionReturnType = StringType
-
-      override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
-        val a = getArg[StringLit]("a", scope, ctx).value
-        val b = getArg[StringLit]("b", scope, ctx).value
-        Right(StringLit(a + b))
-      }
-    }
-    object ConcatSymbol extends BuildInFunction {
-      val key: String = "concat_symbol"
-      val params: List[FunctionParam] = List(SymbolParam("a"), SymbolParam("b"))
-      val returnType: FunctionReturnType = SymbolType
-
-      override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
-        val a = getArg[SymbolLit]("a", scope, ctx).label
-        val b = getArg[SymbolLit]("b", scope, ctx).label
-        Right(SymbolLit(a + b))
-      }
-    }
   }
+
   object context {
-    val values = List(CtxGetTable)
-
-    object CtxGetTable extends BuildInFunction {
-      val key: String = "ctx_get_table"
-      val params: List[FunctionParam] = List(NumberParam("index"))
-      val returnType: FunctionReturnType = SymbolType
-
-      override def apply0(scope: Scope, ctx: QueryContext): Result[SymbolLit] = {
+    val GetTable = makeBuildInFunction("get_table", List(FunctionParam("index", NumberType)), SymbolType) {
+      (scope, ctx) =>
         val i = getArg[NumberLit]("index", scope, ctx).value
         ctx.tables.lift(i.toInt) match {
           case Some(tbl) => Right(tbl)
           case None      => Left(UnhandleError(s"table not found. index: $i"))
         }
-      }
     }
+
+    val values = List(GetTable)
   }
   object constants {
-    val values = List(SingleDot)
-
-    object SingleDot extends BuildInFunction {
-      val key: String = "single_dot"
-      val params: List[FunctionParam] = Nil
-      val returnType: FunctionReturnType = SymbolType
-
-      override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
-        Right(SymbolLit("."))
-      }
-    }
+    val SingleDot = "single_dot" -> Pure(SymbolLit("."))
+    val values: Scope = Map(SingleDot)
   }
+
   object develop {
-    val values = List(Eval, Debug)
-
-    object Eval extends BuildInFunction {
-      val key: String = "eval"
-      val params: List[FunctionParam] = List(ExprParam("value"))
-      val returnType: FunctionReturnType = ExprType
-
-      override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
-        val value = getArg[Expr]("value", scope, ctx)
-        val evaled = value.eval(scope, ctx)
-        Right(value)
-      }
+    val Debug = makeBuildInFunction("dbg", List(FunctionParam("value", Generics)), Generics) { (scope, ctx) =>
+      val value = getArg[Expr]("value", scope, ctx)
+      println(value)
+      Right(value)
     }
-    object Debug extends BuildInFunction {
-      val key: String = "debug"
-      val params: List[FunctionParam] = List(ExprParam("value"))
-      val returnType: FunctionReturnType = ExprType
 
-      override def apply0(scope: Scope, ctx: QueryContext): Result[Expr] = {
-        val value = getArg[Expr]("value", scope, ctx)
-        println(value)
-        Right(value)
-      }
-    }
+    val values = List(Debug)
   }
-
-  val functions: Scope =
-    (calc.values ++ context.values ++ constants.values ++ develop.values).map(f => f.key -> f)(collection.breakOut)
 }

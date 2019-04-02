@@ -6,16 +6,16 @@ define {
     q{ $`? IS NOT NULL`($lhs) }
   }
   defun table_access(col: Symbol, index: Number) => Symbol {
-    let tbl = $ctx_get_table($index)
-    let accessor = $concat_symbol($tbl, $single_dot)
-    $concat_symbol($accessor, $col)
+    let tbl = $get_table($index)
+    let accessor = $csm($tbl, $single_dot)
+    $csm($accessor, $col)
   }
   defun c(col: Expr) => Raw {
     q{ $`COUNT(?)`($col) }
   }
   defun like(col: Symbol, keyword: String) => Expr {
-    let lk = $concat_string($keyword, "%")
-    let lk = $concat_string("%", $lk)
+    let lk = $cst($keyword, "%")
+    let lk = $cst("%", $lk)
     q{ $`? LIKE(?)`($col, $keyword) }
   }
 }
