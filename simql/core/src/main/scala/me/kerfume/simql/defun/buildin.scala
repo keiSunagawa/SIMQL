@@ -5,7 +5,7 @@ import me.kerfume.simql.node.SIMQLFunction._
 import me.kerfume.simql.node._
 
 object buildin {
-  val functions: Scope = (calc.values ++ context.values ++ develop.values)
+  val functions: Scope = (calc.values ++ context.values ++ control.values ++ develop.values)
     .map(f => f.key -> Pure(f))
     .toMap ++ constants.values
 
@@ -97,6 +97,17 @@ object buildin {
     val values = List(Add, Sub, Mul, Div, ConcatString, ConcatSymbol)
   }
 
+  object control {
+    // TODO cond type is Boolean
+    val If = makeBuildInFunction("if", List(FunctionParam("cond", NumberType), FunctionParam("then", Generics), FunctionParam("else", Generics)), Generics) {
+      (scope, ctx) =>
+        val cond = getArg[NumberLit]("cond", scope, ctx).value
+      if (cond >= 1) Right(getArg[Expr]("then", scope, ctx))
+      else Right(getArg[Expr]("else", scope, ctx))
+    }
+
+    val values = List(If)
+  }
   object context {
     val GetTable = makeBuildInFunction("get_table", List(FunctionParam("index", NumberType)), SymbolType) {
       (scope, ctx) =>
