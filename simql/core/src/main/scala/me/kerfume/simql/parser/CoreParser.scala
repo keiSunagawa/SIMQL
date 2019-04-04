@@ -8,7 +8,7 @@ trait CoreParser { self: JavaTokenParsers =>
     val value = s.replaceAll("\"", "")
     StringLit(value)
   }
-  def number: Parser[NumberLit] = decimalNumber ^^ { s =>
+  def number: Parser[NumberLit] = """-?(\d+(\.\d*)?|\d*\.\d+)""".r ^^ { s =>
     val value = BigDecimal(s)
     NumberLit(value)
   }
