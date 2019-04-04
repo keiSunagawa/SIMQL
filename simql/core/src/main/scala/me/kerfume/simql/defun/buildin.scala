@@ -94,15 +94,28 @@ object buildin {
           Right(SymbolLit(a + b))
       }
 
-    val values = List(Add, Sub, Mul, Div, ConcatString, ConcatSymbol)
+    val Eq = makeBuildInFunction("eq", List(FunctionParam("a", Generics), FunctionParam("b", Generics)), BooleanType) {
+      (scope, ctx) =>
+        val a = getArg[Expr]("a", scope, ctx)
+        val b = getArg[Expr]("b", scope, ctx)
+        Right(BooleanLit(a == b))
+    }
+    val Not = makeBuildInFunction("not", List(FunctionParam("bool", BooleanType)), BooleanType) { (scope, ctx) =>
+      val bool = getArg[BooleanLit]("bool", scope, ctx).value
+      Right(BooleanLit(!bool))
+    }
+
+    val values = List(Add, Sub, Mul, Div, ConcatString, ConcatSymbol, Eq, Not)
   }
 
   object control {
-    // TODO cond type is Boolean
-    val If = makeBuildInFunction("if", List(FunctionParam("cond", NumberType), FunctionParam("then", Generics), FunctionParam("else", Generics)), Generics) {
-      (scope, ctx) =>
-        val cond = getArg[NumberLit]("cond", scope, ctx).value
-      if (cond >= 1) Right(getArg[Expr]("then", scope, ctx))
+    val If = makeBuildInFunction(
+      "if",
+      List(FunctionParam("cond", BooleanType), FunctionParam("then", Generics), FunctionParam("else", Generics)),
+      Generics
+    ) { (scope, ctx) =>
+      val cond = getArg[BooleanLit]("cond", scope, ctx).value
+      if (cond) Right(getArg[Expr]("then", scope, ctx))
       else Right(getArg[Expr]("else", scope, ctx))
     }
 

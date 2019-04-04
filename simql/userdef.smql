@@ -13,7 +13,7 @@ define {
     let res2 = $add($res, $res)
     q{ $res2 == 5 }
   }
-  defun if_test(in: Number) => String {
+  defun if_test(in: Boolean) => String {
     $if($in, "aa", "bb")
   }
 }

@@ -10,6 +10,7 @@ object MySQLGenerator extends Generator {
   object syntax {
     def stringToSQL(node: StringLit): String = s"'${node.value}'"
     def numberToSQL(node: NumberLit): String = node.value.toString
+    def booleanToSQL(node: BooleanLit): String = node.value.toString
     def nullToSQL(): String = "null"
     def rawToSQL(node: Raw): String = {
       val argsSQL = node.args.map(exprToSQL)
@@ -24,8 +25,10 @@ object MySQLGenerator extends Generator {
       case RBracket(expr)      => s"(${exprToSQL(expr)})"
       case n: StringLit        => stringToSQL(n)
       case n: NumberLit        => numberToSQL(n)
+      case n: BooleanLit       => booleanToSQL(n)
       case n: SymbolLit        => symbolToSQL(n)
       case NullLit             => nullToSQL()
+      case f: SIMQLFunction    => throw new RuntimeException(s"function not generated sql. ${f.key}")
       case f: Call             => throw new RuntimeException(s"unresolve function call found. ${f.symbol}")
     }
 

@@ -12,5 +12,9 @@ trait CoreParser { self: JavaTokenParsers =>
     val value = BigDecimal(s)
     NumberLit(value)
   }
+  def boolean: Parser[BooleanLit] = """(true|false)""".r ^^ {
+    case "true"  => BooleanLit(true)
+    case "false" => BooleanLit(false)
+  }
   def symbol: Parser[SymbolLit] = """[a-zA-Z][a-zA-Z0-9_\.]*""".r ^^ { SymbolLit(_) }
 }

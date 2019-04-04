@@ -24,7 +24,7 @@ trait QueryParser { self: JavaTokenParsers with CoreParser =>
         case None     => s
       }
   }
-  def term: Parser[Expr] = nullLit | string | number | column | rbracket | raw | functionCall
+  def term: Parser[Expr] = nullLit | boolean | string | number | column | rbracket | raw | functionCall
   def rbracket: Parser[RBracket] = "(" ~> expr <~ ")" ^^ { RBracket(_) }
 
   def op0: Parser[Op] = """(>=|<=|>|<|==|!=)""".r ^^ { opStr =>

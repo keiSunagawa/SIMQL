@@ -5,12 +5,13 @@ import me.kerfume.simql.node._
 import me.kerfume.simql.node.SIMQLFunction._
 
 trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser =>
-  def functionType: Parser[SIMQLType] = "(String|Number|Symbol|Expr|Raw)".r ^^ {
-    case "String" => StringType
-    case "Number" => NumberType
-    case "Symbol" => SymbolType
-    case "Raw"    => RawType
-    case "Expr"   => ExprType
+  def functionType: Parser[SIMQLType] = "(String|Number|Boolean|Symbol|Expr|Raw)".r ^^ {
+    case "String"  => StringType
+    case "Number"  => NumberType
+    case "Boolean" => BooleanType
+    case "Symbol"  => SymbolType
+    case "Raw"     => RawType
+    case "Expr"    => ExprType
   }
   def functionParam: Parser[FunctionParam] = (symbol <~ ":") ~ functionType ^^ {
     case s ~ tpe => FunctionParam(s.label, tpe)

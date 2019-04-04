@@ -16,6 +16,9 @@ trait ASTVisitor {
   def visitNumber(node: NumberLit): RE[NumberLit] = re { _ =>
     Right(node)
   }
+  def visitBoolean(node: BooleanLit): RE[BooleanLit] = re { _ =>
+    Right(node)
+  }
   def visitRaw(node: Raw): RE[Raw] = re { ctx =>
     for {
       args <- node.args.mapE(a => visitExpr(a).run(ctx))
@@ -34,12 +37,13 @@ trait ASTVisitor {
         resLhs <- visitExpr(lhs)
         resRhs <- visitExpr(rhs)
       } yield BExpr(resLhs, op, resRhs)
-    case n: RBracket  => visitExpr(n.expr).map(RBracket)
-    case n: Call      => visitFunctionCall(n).map(identity)
-    case n: Raw       => visitRaw(n).map(identity)
-    case n: SymbolLit => visitSymbol(n).map(identity)
-    case n: StringLit => visitString(n).map(identity)
-    case n: NumberLit => visitNumber(n).map(identity)
+    case n: RBracket   => visitExpr(n.expr).map(RBracket)
+    case n: Call       => visitFunctionCall(n).map(identity)
+    case n: Raw        => visitRaw(n).map(identity)
+    case n: SymbolLit  => visitSymbol(n).map(identity)
+    case n: BooleanLit => visitBoolean(n).map(identity)
+    case n: StringLit  => visitString(n).map(identity)
+    case n: NumberLit  => visitNumber(n).map(identity)
     case n: SIMQLFunction =>
       re { _ =>
         Right(n)

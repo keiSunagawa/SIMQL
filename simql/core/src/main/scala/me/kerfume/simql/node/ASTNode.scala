@@ -20,6 +20,9 @@ case class StringLit(value: String) extends Atomic {
 case class NumberLit(value: BigDecimal) extends Atomic {
   def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = Right(NumberType)
 }
+case class BooleanLit(value: Boolean) extends Atomic {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = Right(BooleanType)
+}
 case object NullLit extends Atomic {
   def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = ??? // TODO
 }
@@ -231,7 +234,7 @@ case class FunctionType(paramType: SIMQLType, returnType: SIMQLType) extends SIM
       val ret = returnType match {
         case Generics        => other
         case f: FunctionType => f.resolveGenerics(other)
-        case _               => other
+        case prm             => prm
       }
       FunctionType(param, ret)
   }
