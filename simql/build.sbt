@@ -9,8 +9,14 @@ val simqlVersion = "0.1-SNAPSHOT"
 val jvmDeps = Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1",
   "org.typelevel" %% "cats-core" % "1.6.0",
+  "com.chuusai" %% "shapeless" % "2.3.3",
   "org.scalatest" %% "scalatest" % "3.0.5" % Test
 )
+resolvers ++= Seq(
+  Resolver.sonatypeRepo("releases"),
+  Resolver.sonatypeRepo("snapshots")
+)
+
 
 lazy val root = project
   .in(file("."))
@@ -31,6 +37,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.scala-lang.modules" %%% "scala-parser-combinators" % "1.1.1",
       "org.typelevel" %%% "cats-core" % "1.6.0",
+      "com.chuusai" %%% "shapeless" % "2.3.3",
       "org.scalatest" %% "scalatest" % "3.0.5" % Test
     )
   )
