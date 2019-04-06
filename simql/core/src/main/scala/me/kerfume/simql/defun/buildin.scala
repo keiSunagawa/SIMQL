@@ -65,21 +65,21 @@ object buildin {
   }
   object Converter {
     type AUX[I0, O0] = Converter[I0] { type O = O0 }
+    type \:>[I0 <: SIMQLType, O0] = AUX[P[I0], O0]
     def simqlTypeC[F <: SIMQLType, T <: Expr]: Converter.AUX[P[F], T] = new Converter[P[F]] {
       type O = T
       def convert(in: P[F], scope: Scope, ctx: QueryContext): Result[O] = {
         getArg[O](in.key, scope, ctx)
       }
     }
-    implicit val strC: Converter.AUX[P[StringType.type], StringLit] = simqlTypeC[StringType.type, StringLit]
-    implicit val boolC: Converter.AUX[P[BooleanType.type], BooleanLit] = simqlTypeC[BooleanType.type, BooleanLit]
-    implicit val symC: Converter.AUX[P[SymbolType.type], SymbolLit] = simqlTypeC[SymbolType.type, SymbolLit]
-    implicit val numC: Converter.AUX[P[NumberType.type], NumberLit] = simqlTypeC[NumberType.type, NumberLit]
-    implicit val rawC: Converter.AUX[P[RawType.type], Raw] = simqlTypeC[RawType.type, Raw]
-    implicit val exprC: Converter.AUX[P[ExprType.type], Expr] = simqlTypeC[ExprType.type, Expr]
-    implicit val funC: Converter.AUX[P[FunctionType], SIMQLFunction] = simqlTypeC[FunctionType, SIMQLFunction]
-    implicit val genC
-      : Converter.AUX[P[Generics.type], Expr] = simqlTypeC[Generics.type, Expr] // genericsは実質AnyなのでExprで型を潰す
+    implicit val strC: StringType.type \:> StringLit = simqlTypeC[StringType.type, StringLit]
+    implicit val boolC: BooleanType.type \:> BooleanLit = simqlTypeC[BooleanType.type, BooleanLit]
+    implicit val symC: SymbolType.type \:> SymbolLit = simqlTypeC[SymbolType.type, SymbolLit]
+    implicit val numC: NumberType.type \:> NumberLit = simqlTypeC[NumberType.type, NumberLit]
+    implicit val rawC: RawType.type \:> Raw = simqlTypeC[RawType.type, Raw]
+    implicit val exprC: ExprType.type \:> Expr = simqlTypeC[ExprType.type, Expr]
+    implicit val funC: FunctionType \:> SIMQLFunction = simqlTypeC[FunctionType, SIMQLFunction]
+    implicit val genC: Generics.type \:> Expr = simqlTypeC[Generics.type, Expr] // genericsは実質AnyなのでExprで型を潰す
 
     implicit val hnilC: Converter.AUX[HNil, HNil] = new Converter[HNil] {
       type O = HNil
