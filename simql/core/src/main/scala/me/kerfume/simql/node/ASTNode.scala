@@ -39,7 +39,6 @@ case class Call(symbol: String, args: List[Expr]) extends QueryAST with Function
   private[this] def refTypeCheck(tpe: SIMQLType, typeArgs: List[SIMQLType]): Result[SIMQLType] = tpe match {
     case f: FunctionType =>
       for {
-        _ <- Either.cond(typeArgs.nonEmpty, (), UnhandleError("function require to args."))
         ret <- typeArgs.foldE[SIMQLError, SIMQLType](f) {
                 case (tpe, arg) =>
                   tpe match {
@@ -289,11 +288,12 @@ trait SIMQLFunction extends Atomic { self =>
   }
 
   final def apply(args: List[Value], ctx: QueryContext): Result[Expr] = {
-    for {
-      arg <- args.headOption.toRight(UnhandleError(s"args empty. key: $key"))
-      scope = ctx.globalScope ++ outerScope + (param.name -> arg)
-      res <- apply0(scope, ctx, args.tail)
-    } yield res
+    args.headOption match {
+      case Some(arg) =>
+        val scope = ctx.globalScope ++ outerScope + (param.name -> arg)
+        apply0(scope, ctx, args.tail)
+      case None => Right(this)
+    }
   }
 
   def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr]

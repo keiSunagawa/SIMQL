@@ -5,7 +5,7 @@ import me.kerfume.simql.node._
 import me.kerfume.simql.node.SIMQLFunction._
 
 trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser =>
-  def atomicType: Parser[SIMQLType] = "(String|Number|Boolean|Symbol|Expr|Raw)".r ^^ {
+  def lowerType: Parser[SIMQLType] = "(String|Number|Boolean|Symbol|Expr|Raw)".r ^^ {
     case "String"  => StringType
     case "Number"  => NumberType
     case "Boolean" => BooleanType
@@ -13,14 +13,26 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
     case "Raw"     => RawType
     case "Expr"    => ExprType
   }
-  def listType: Parser[ListType] = "List<" ~> functionType <~ ">" ^^ { ListType(_) }
-  def functionType: Parser[SIMQLType] = atomicType | listType
+  def listType: Parser[ListType] = "List<" ~> simqlType <~ ">" ^^ { ListType(_) }
+  def atomicType: Parser[SIMQLType] = lowerType | listType | ("(" ~> functionType <~ ")")
+  def functionType: Parser[SIMQLType] = (atomicType <~ "=>") ~ atomicType ~ rep("=>" ~> atomicType) ^^ {
+    case f ~ t ~ nexts =>
+      if (nexts.nonEmpty) {
+        val last = nexts.last
+        val types = f :: t :: nexts.init
+        types.foldRight[SIMQLType](last) {
+          case (prm, ret) =>
+            FunctionType(prm, ret)
+        }
+      } else FunctionType(f, t)
+  }
+  def simqlType: Parser[SIMQLType] = functionType | atomicType
 
-  def functionParam: Parser[FunctionParam] = (symbol <~ ":") ~ functionType ^^ {
+  def functionParam: Parser[FunctionParam] = (symbol <~ ":") ~ simqlType ^^ {
     case s ~ tpe => FunctionParam(s.label, tpe)
   }
 
-  def nil: Parser[SIMQLList] = "nil<" ~> functionType <~ ">" ^^ { SIMQLList(Nil, _) }
+  def nil: Parser[SIMQLList] = "nil<" ~> simqlType <~ ">" ^^ { SIMQLList(Nil, _) }
 
   def dterm: Parser[Expr] = string | nil | number | symbol | functionCall
   def queryBlock: Parser[Expr] = "q{" ~> expr <~ "}"
@@ -32,7 +44,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
   }
 
   def function =
-    ("(" ~> functionParam ~ rep("," ~> functionParam) <~ ")") ~ ("=>" ~> functionType <~ "{") ~ (rep(bind) ~ dexpr <~ "}")
+    ("(" ~> functionParam ~ rep("," ~> functionParam) <~ ")") ~ ("=>" ~> simqlType <~ "{") ~ (rep(bind) ~ dexpr <~ "}")
   def closure: Parser[Closure] = function ^^ {
     case ps ~ retType ~ block =>
       val bd ~ retNode = block

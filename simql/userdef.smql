@@ -21,11 +21,13 @@ define {
     let x = $cons(5, $cons(3, $y))
     $x
   }
-  defun af_test(in: Number) => Number {
-    let x = (n: Number) => Number {
-      let z = $add($n, $in)
-      $z
+  defun bind_three(in: Number => Number) => Number {
+    $in(3)
+  }
+  defun af_test(y: Number) => Number {
+    let x = (in2: Number) => Number {
+      $add($y, $in2)
     }
-    $x(3)
+    $bind_three($dbg($x))
   }
 }
