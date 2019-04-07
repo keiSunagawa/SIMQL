@@ -10,13 +10,14 @@ val jvmDeps = Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1",
   "org.typelevel" %% "cats-core" % "1.6.0",
   "com.chuusai" %% "shapeless" % "2.3.3",
+  "com.github.mpilquist" %% "simulacrum" % "0.15.0",
+  compilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.patch),
   "org.scalatest" %% "scalatest" % "3.0.5" % Test
 )
 resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )
-
 
 lazy val root = project
   .in(file("."))
@@ -31,13 +32,26 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     name := "core",
-    version := simqlVersion
+    version := simqlVersion,
+//    scalacOptions ++= Seq(
+//      "-deprecation",
+//      "-feature",
+//      "-unchecked",
+//      "-Xlint",
+//      "-Ywarn-dead-code",
+//      "-Ywarn-numeric-widen",
+//      "-Ywarn-unused",
+//      "-Ywarn-unused-import",
+//      "-Ywarn-value-discard"
+//    )
   )
   .jsSettings(
     libraryDependencies ++= Seq(
       "org.scala-lang.modules" %%% "scala-parser-combinators" % "1.1.1",
       "org.typelevel" %%% "cats-core" % "1.6.0",
       "com.chuusai" %%% "shapeless" % "2.3.3",
+      "com.github.mpilquist" %%% "simulacrum" % "0.15.0",
+      compilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.patch),
       "org.scalatest" %% "scalatest" % "3.0.5" % Test
     )
   )

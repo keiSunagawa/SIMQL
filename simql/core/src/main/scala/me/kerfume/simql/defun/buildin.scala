@@ -1,9 +1,10 @@
 package me.kerfume.simql.defun
 
 import me.kerfume.simql.defun.buildin.Converter.ToList
-import me.kerfume.simql.{node, _}
+import me.kerfume.simql._
 import me.kerfume.simql.node.SIMQLFunction._
 import me.kerfume.simql.node._
+import me.kerfume.simql.node.typeclass.Eval
 import shapeless._
 
 object buildin {
@@ -11,14 +12,8 @@ object buildin {
     .map(f => f.key -> Pure(f))
     .toMap ++ constants.values
 
-  private[this] def getArg[T <: Expr](key: String, scope: Scope, ctx: QueryContext): Result[T] = {
-    scope(key) match {
-      case v: Thunk =>
-        v.eval(ctx).map(_.asInstanceOf[T])
-      case v: Pure =>
-        v.eval(scope, ctx).map(_.asInstanceOf[T])
-    }
-  }
+  private[this] def getArg[T <: Expr](key: String, scope: Scope, ctx: QueryContext): Result[T] =
+    Eval[Value].eval(scope(key), scope, ctx).map(_.asInstanceOf[T])
 
   trait BuildInFunction extends SIMQLFunction {
     val body: List[Bind] = Nil

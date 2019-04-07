@@ -5,14 +5,13 @@ import me.kerfume.simql.types._
 import me.kerfume.simql.functions._
 import cats.instances.list._
 import SIMQLFunction._
+import me.kerfume.simql.node.typeclass.Eval
 
 sealed trait ASTNode
 sealed trait FunctionAST extends ASTNode
 sealed trait QueryAST extends ASTNode
 
-sealed trait Atomic extends Expr {
-  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = Right(this)
-}
+sealed trait Atomic extends Expr
 
 case class StringLit(value: String) extends Atomic {
   def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = Right(StringType)
@@ -32,7 +31,6 @@ case class SymbolLit(label: String) extends Atomic {
 
 sealed trait Expr extends QueryAST with FunctionAST {
   def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType]
-  def eval(scope: Scope, ctx: QueryContext): Result[Expr]
 }
 
 case class Call(symbol: String, args: List[Expr]) extends QueryAST with FunctionAST with Expr {
@@ -86,32 +84,10 @@ case class Call(symbol: String, args: List[Expr]) extends QueryAST with Function
       }
     }
   }
-
-  override def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
-    for {
-      f <- scope.get(symbol).toRight(FunctionNotFound(symbol))
-      invalue <- f match {
-                  case v: Thunk => v.eval(ctx)
-                  case v: Pure  => v.eval(scope, ctx)
-                }
-      res <- invalue match {
-              case ff: SIMQLFunction => ff.apply(args.map(Thunk(_, scope)), ctx) // FIXME 実装が怪しい
-              case other             => Right(other)
-            }
-    } yield res
-  }
 }
 
 case class Raw(sql: String, args: List[Expr]) extends Expr {
   def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = Right(RawType)
-  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
-    for {
-      evaled <- args.mapE(_.eval(scope, ctx))
-    } yield
-      this.copy(
-        args = evaled
-      )
-  }
 }
 
 case class Op(op: ExprOp.Op) extends QueryAST
@@ -123,29 +99,10 @@ case class BExpr(lhs: Expr, op: Op, rhs: Expr) extends Expr {
       _ <- lhs.typeCheck(scope, paramMap)
       _ <- rhs.typeCheck(scope, paramMap)
     } yield ExprType
-
-  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
-    for {
-      evaledLhs <- lhs.eval(scope, ctx)
-      evaledRhs <- rhs.eval(scope, ctx)
-    } yield
-      this.copy(
-        lhs = evaledLhs,
-        rhs = evaledRhs
-      )
-  }
 }
 
 case class RBracket(expr: Expr) extends Expr {
   def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = expr.typeCheck(scope, paramMap).map(_ => ExprType)
-  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = {
-    for {
-      evaled <- expr.eval(scope, ctx)
-    } yield
-      this.copy(
-        expr = evaled
-      )
-  }
 }
 
 case class JoinType(value: JoinType.Op) extends QueryAST
@@ -202,17 +159,14 @@ case class Bind(symbol: String, value: Expr) extends FunctionAST {
 sealed trait Value {
   val value: Expr
   protected[this] def typeCheck0(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = value.typeCheck(scope, paramMap)
-  protected[this] def eval0(scope: Scope, ctx: QueryContext): Result[Expr] = value.eval(scope, ctx)
 }
 case class Thunk(value: Expr, scope: Scope) extends Value {
   def typeCheck(paramMap: TypeMap): Result[SIMQLType] = {
     typeCheck0(scope, paramMap)
   }
-  def eval(ctx: QueryContext): Result[Expr] = eval0(scope, ctx)
 }
 case class Pure(value: Expr) extends Value {
   def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = typeCheck0(scope, paramMap)
-  def eval(scope: Scope, ctx: QueryContext): Result[Expr] = eval0(scope, ctx)
 }
 sealed trait SIMQLType {
   val subType: List[SIMQLType] = Nil
@@ -273,8 +227,6 @@ trait SIMQLFunction extends Atomic { self =>
   val body: List[Bind]
   val returnValue: Expr
 
-  override def eval(scope: Scope, ctx: QueryContext): Result[Expr] = Right(setOuterScope(scope))
-
   def setOuterScope(scope: Scope): SIMQLFunction = new SIMQLFunction {
     override val key: String = self.key
     override val param: FunctionParam = self.param
@@ -319,7 +271,7 @@ trait UserFunction extends SIMQLFunction {
     val binded = body.foldLeft(scope) {
       case (acm, b) => b.bind(acm, ctx)
     }
-    returnValue.eval(binded, ctx).flatMap {
+    Eval[Expr].eval(returnValue, binded, ctx).flatMap {
       case next: SIMQLFunction =>
         if (nextArgs.nonEmpty) next.setOuterScope(binded)(nextArgs, ctx)
         else Right(next)
