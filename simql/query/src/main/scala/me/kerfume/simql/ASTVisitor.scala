@@ -44,6 +44,10 @@ trait ASTVisitor {
     case n: BooleanLit => visitBoolean(n).map(identity)
     case n: StringLit  => visitString(n).map(identity)
     case n: NumberLit  => visitNumber(n).map(identity)
+    case n: SIMQLList =>
+      re { ctx =>
+        n.elems.mapE(e => visitExpr(e).run(ctx)).map(SIMQLList(_, n.elemType))
+      }
     case n: SIMQLFunction =>
       re { _ =>
         Right(n)

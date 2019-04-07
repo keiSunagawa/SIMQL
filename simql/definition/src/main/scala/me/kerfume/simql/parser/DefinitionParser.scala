@@ -5,7 +5,7 @@ import me.kerfume.simql.node._
 import me.kerfume.simql.node.SIMQLFunction._
 
 trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser =>
-  def functionType: Parser[SIMQLType] = "(String|Number|Boolean|Symbol|Expr|Raw)".r ^^ {
+  def atomicType: Parser[SIMQLType] = "(String|Number|Boolean|Symbol|Expr|Raw)".r ^^ {
     case "String"  => StringType
     case "Number"  => NumberType
     case "Boolean" => BooleanType
@@ -13,11 +13,16 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
     case "Raw"     => RawType
     case "Expr"    => ExprType
   }
+  def listType: Parser[ListType] = "List<" ~> functionType <~ ">" ^^ { ListType(_) }
+  def functionType: Parser[SIMQLType] = atomicType | listType
+
   def functionParam: Parser[FunctionParam] = (symbol <~ ":") ~ functionType ^^ {
     case s ~ tpe => FunctionParam(s.label, tpe)
   }
 
-  def dterm: Parser[Expr] = string | number | symbol | functionCall
+  def nil: Parser[SIMQLList] = "nil<" ~> functionType <~ ">" ^^ { SIMQLList(Nil, _) }
+
+  def dterm: Parser[Expr] = string | nil | number | symbol | functionCall
   def queryBlock: Parser[Expr] = "q{" ~> expr <~ "}"
   def dexpr: Parser[Expr] = queryBlock | dterm
 
@@ -26,7 +31,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
       Bind(s.label, e)
   }
 
-  def defun: Parser[UserFunction] = // TODO paramは一つ以上
+  def defun: Parser[UserFunction] =
     ("defun" ~> symbol) ~ ("(" ~> opt(functionParam ~ rep("," ~> functionParam)) <~ ")") ~ ("=>" ~> functionType <~ "{") ~ (rep(
       bind
     ) ~ dexpr <~ "}") ^^ {

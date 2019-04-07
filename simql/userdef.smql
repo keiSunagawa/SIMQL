@@ -16,4 +16,9 @@ define {
   defun if_test(in: Boolean) => String {
     $if($in, "aa", "bb")
   }
+  defun list_test(in: Number) => List<Number> {
+    let y = nil<Number>
+    let x = $cons(5, $cons(3, $y))
+    $x
+  }
 }

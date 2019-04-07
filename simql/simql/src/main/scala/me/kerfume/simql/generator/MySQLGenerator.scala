@@ -28,6 +28,7 @@ object MySQLGenerator extends Generator {
       case n: BooleanLit       => booleanToSQL(n)
       case n: SymbolLit        => symbolToSQL(n)
       case NullLit             => nullToSQL()
+      case l: SIMQLList        => throw new RuntimeException(s"list type not generated sql. ${l}")
       case f: SIMQLFunction    => throw new RuntimeException(s"function not generated sql. ${f.key}")
       case f: Call             => throw new RuntimeException(s"unresolve function call found. ${f.symbol}")
     }

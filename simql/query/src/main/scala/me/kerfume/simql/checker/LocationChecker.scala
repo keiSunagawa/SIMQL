@@ -69,9 +69,9 @@ object LocationCheckVisitor extends ASTVisitor {
     expr match {
       case f: Call =>
         val retType = scope(f.symbol) |> {
-          case uf: UserFunction => convert(uf.returnType)
-          case Thunk(v, s)      => v // TODO
-          case Pure(v)          => v
+          case uf: SIMQLFunction => convert(uf.returnType)
+          case Thunk(v, s)       => v // TODO
+          case Pure(v)           => v
         }
         allowedTo.isDefinedAt(retType)
       case other =>

@@ -55,9 +55,10 @@ case class Call(symbol: String, args: List[Expr]) extends QueryAST with Function
                                        case (tpe, arg) =>
                                          tpe match {
                                            case f: FunctionType =>
-                                             val f2 = if (f.paramType == Generics) {
-                                               f.resolveGenerics(arg)
-                                             } else f
+                                             val f2 =
+                                               if (f.paramType == Generics || f.paramType == ListType(Generics)) {
+                                                 f.resolveGenerics(arg)
+                                               } else f
                                              Either.cond(
                                                f2.paramType.isSameType(arg),
                                                f2.returnType,
@@ -215,7 +216,7 @@ case class Pure(value: Expr) extends Value {
 }
 sealed trait SIMQLType {
   val subType: List[SIMQLType] = Nil
-  def isSameType(that: SIMQLType): Boolean = this == that || subType.contains(that) // || that == Generics
+  def isSameType(that: SIMQLType): Boolean = this == that || subType.contains(that) || that == Generics
 }
 sealed trait ElemType extends SIMQLType
 case object StringType extends ElemType
@@ -226,21 +227,40 @@ case object RawType extends ElemType
 case object ExprType extends ElemType {
   override val subType = List(StringType, BooleanType, SymbolType, NumberType, RawType)
 }
+case class ListType(elemType: SIMQLType) extends SIMQLType
 case class FunctionType(paramType: SIMQLType, returnType: SIMQLType) extends SIMQLType {
   def resolveGenerics(tpe: SIMQLType): FunctionType = tpe match {
     case Generics => throw new RuntimeException("invalid input can't resolve generics in Generics")
     case other =>
-      val param = if (paramType == Generics) other else Generics
+      val param = paramType match {
+        case Generics           => other
+        case ListType(Generics) => ListType(other)
+        case prm                => prm
+      }
       val ret = returnType match {
-        case Generics        => other
-        case f: FunctionType => f.resolveGenerics(other)
-        case prm             => prm
+        case Generics           => other
+        case f: FunctionType    => f.resolveGenerics(other)
+        case ListType(Generics) => ListType(other)
+        case prm                => prm
       }
       FunctionType(param, ret)
   }
 }
 case object Generics extends SIMQLType {
   override def isSameType(that: SIMQLType): Boolean = true
+}
+
+// TODO function callを要素として持ちうる？cons関数で駆らなずevalするのでないもとして扱うべきか
+case class SIMQLList(elems: List[Expr], elemType: SIMQLType) extends Atomic {
+  def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = {
+    elems.foldE(ListType(elemType)) {
+      case (tpe, e) =>
+        for {
+          etpe <- e.typeCheck(scope, paramMap)
+          _ <- Either.cond(tpe.elemType == etpe, (), UnhandleError("list type error."))
+        } yield tpe
+    }
+  }
 }
 import SIMQLFunction._
 
@@ -288,7 +308,7 @@ trait UserFunction extends SIMQLFunction {
                    b.value.typeCheck(lscope, acm).map(tpe => acm + (b.symbol -> tpe))
                }
       tpe <- returnValue.typeCheck(scope, binded)
-      _ <- Either.cond(returnType.isSameType(tpe), (), UnhandleError("function return type error"))
+      _ <- Either.cond(returnType.isSameType(tpe), (), UnhandleError(s"function return type error. key: $key"))
     } yield FunctionType(param.tpe, returnType)
   }
 

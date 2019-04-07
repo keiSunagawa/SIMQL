@@ -7,7 +7,7 @@ import me.kerfume.simql.node._
 import shapeless._
 
 object buildin {
-  val functions: Scope = (calc.values ++ context.values ++ control.values ++ develop.values)
+  val functions: Scope = (calc.values ++ context.values ++ list.values ++ control.values ++ develop.values)
     .map(f => f.key -> Pure(f))
     .toMap ++ constants.values
 
@@ -78,6 +78,7 @@ object buildin {
     implicit val numC: NumberType.type \:> NumberLit = simqlTypeC[NumberType.type, NumberLit]
     implicit val rawC: RawType.type \:> Raw = simqlTypeC[RawType.type, Raw]
     implicit val exprC: ExprType.type \:> Expr = simqlTypeC[ExprType.type, Expr]
+    implicit val listC: ListType \:> SIMQLList = simqlTypeC[ListType, SIMQLList]
     implicit val funC: FunctionType \:> SIMQLFunction = simqlTypeC[FunctionType, SIMQLFunction]
     implicit val genC: Generics.type \:> Expr = simqlTypeC[Generics.type, Expr] // genericsは実質AnyなのでExprで型を潰す
 
@@ -205,6 +206,20 @@ object buildin {
     }
 
     val values = List(Add, Sub, Mul, Div, ConcatString, ConcatSymbol, Eq, Not)
+  }
+
+  object list {
+    val Cons = evalArgsFunction(
+      name = "cons",
+      params = "x" \> Generics :: "xs" \> ListType(Generics) :: HNil,
+      retType = ListType(Generics)
+    ) { args: Expr :: SIMQLList :: HNil => ctx =>
+      val x :: xs :: _ = args
+      val consed = xs.copy(elems = x :: xs.elems)
+      Right(consed)
+    }
+
+    val values = List(Cons)
   }
 
   object control {
