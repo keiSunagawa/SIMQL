@@ -21,4 +21,11 @@ define {
     let x = $cons(5, $cons(3, $y))
     $x
   }
+  defun af_test(in: Number) => Number {
+    let x = (n: Number) => Number {
+      let z = $add($n, $in)
+      $z
+    }
+    $x(3)
+  }
 }

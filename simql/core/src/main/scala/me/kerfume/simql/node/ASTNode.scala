@@ -36,6 +36,31 @@ sealed trait Expr extends QueryAST with FunctionAST {
 }
 
 case class Call(symbol: String, args: List[Expr]) extends QueryAST with FunctionAST with Expr {
+  private[this] def refTypeCheck(tpe: SIMQLType, typeArgs: List[SIMQLType]): Result[SIMQLType] = tpe match {
+    case f: FunctionType =>
+      for {
+        _ <- Either.cond(typeArgs.nonEmpty, (), UnhandleError("function require to args."))
+        ret <- typeArgs.foldE[SIMQLError, SIMQLType](f) {
+                case (tpe, arg) =>
+                  tpe match {
+                    case f: FunctionType =>
+                      val f2 =
+                        if (f.paramType == Generics || f.paramType == ListType(Generics)) {
+                          f.resolveGenerics(arg)
+                        } else f
+                      Either.cond(
+                        f2.paramType.isSameType(arg),
+                        f2.returnType,
+                        UnhandleError(
+                          s"unmatch args type. key: $symbol, found: ${arg}, require: ${f2.paramType}"
+                        )
+                      )
+                    case _ => Left(UnhandleError("args to many."))
+                  }
+              }
+      } yield ret
+    case _ => Either.cond(typeArgs.isEmpty, tpe, UnhandleError("var not apply args."))
+  }
   def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] = {
     for {
       typeArgs <- args.mapE(_.typeCheck(scope, paramMap))
@@ -47,35 +72,11 @@ case class Call(symbol: String, args: List[Expr]) extends QueryAST with Function
                           case v: Thunk => v.typeCheck(paramMap)
                           case v: Pure  => v.typeCheck(scope, paramMap)
                         }
-                  res2 <- res match {
-                           case f: FunctionType =>
-                             for {
-                               _ <- Either.cond(typeArgs.nonEmpty, (), UnhandleError("function require to args."))
-                               ret <- typeArgs.foldE[SIMQLError, SIMQLType](f) {
-                                       case (tpe, arg) =>
-                                         tpe match {
-                                           case f: FunctionType =>
-                                             val f2 =
-                                               if (f.paramType == Generics || f.paramType == ListType(Generics)) {
-                                                 f.resolveGenerics(arg)
-                                               } else f
-                                             Either.cond(
-                                               f2.paramType.isSameType(arg),
-                                               f2.returnType,
-                                               UnhandleError(
-                                                 s"unmatch args type. key: $symbol, found: ${arg}, require: ${f2.paramType}"
-                                               )
-                                             )
-                                           case _ => Left(UnhandleError("args to many."))
-                                         }
-                                     }
-                             } yield ret
-                           case _ => Either.cond(typeArgs.isEmpty, res, UnhandleError("var not apply args."))
-                         }
+                  res2 <- refTypeCheck(res, typeArgs)
                 } yield res2
               }
-              .orElse(paramMap.get(symbol).map(Right(_)))
-              .toRight(FunctionNotFound(symbol))
+              .orElse(paramMap.get(symbol).map(refTypeCheck(_, typeArgs)))
+              .toRight(UnhandleError(s"type check: function not found. key: $symbol"))
               .flatMap(identity) // ひどい…
     } yield {
       tpe match {
@@ -95,7 +96,7 @@ case class Call(symbol: String, args: List[Expr]) extends QueryAST with Function
                   case v: Pure  => v.eval(scope, ctx)
                 }
       res <- invalue match {
-              case ff: SIMQLFunction => ff.apply(args.map(Thunk(_, scope)), ctx)
+              case ff: SIMQLFunction => ff.setOuterScope(scope).apply(args.map(Thunk(_, scope)), ctx) // FIXME 実装が怪しい
               case other             => Right(other)
             }
     } yield res
