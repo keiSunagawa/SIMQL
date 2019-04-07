@@ -18,15 +18,15 @@ define {
   }
   defun list_test(in: Number) => List<Number> {
     let y = nil<Number>
-    let x = $cons(5, $cons(3, $y))
+    let x = $cons($in, $cons(3, $y))
     $x
   }
   defun bind_three(in: Number => Number) => Number {
     $in(3)
   }
-  defun af_test(y: Number) => Number {
+  defun af_test(x: Number) => Number {
     let x = (in2: Number) => Number {
-      $add($y, $in2)
+      $add($x, $in2)
     }
     $bind_three($dbg($x))
   }

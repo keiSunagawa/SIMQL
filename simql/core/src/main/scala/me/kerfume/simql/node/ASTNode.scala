@@ -95,7 +95,7 @@ case class Call(symbol: String, args: List[Expr]) extends QueryAST with Function
                   case v: Pure  => v.eval(scope, ctx)
                 }
       res <- invalue match {
-              case ff: SIMQLFunction => ff.setOuterScope(scope).apply(args.map(Thunk(_, scope)), ctx) // FIXME 実装が怪しい
+              case ff: SIMQLFunction => ff.apply(args.map(Thunk(_, scope)), ctx) // FIXME 実装が怪しい
               case other             => Right(other)
             }
     } yield res
@@ -272,6 +272,8 @@ trait SIMQLFunction extends Atomic { self =>
 
   val body: List[Bind]
   val returnValue: Expr
+
+  override def eval(scope: Scope, ctx: QueryContext): Result[Expr] = Right(setOuterScope(scope))
 
   def setOuterScope(scope: Scope): SIMQLFunction = new SIMQLFunction {
     override val key: String = self.key
