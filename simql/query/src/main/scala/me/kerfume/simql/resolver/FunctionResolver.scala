@@ -2,7 +2,7 @@ package me.kerfume.simql.resolver
 
 import me.kerfume.simql._
 import me.kerfume.simql.node._
-import me.kerfume.simql.node.typeclass.Eval
+import me.kerfume.simql.node.typeclass.{Eval, TypeCheck}
 
 class FunctionResolver extends Resolver {
   val visitor = FunctionResolveVisitor
@@ -15,7 +15,7 @@ object FunctionResolveVisitor extends ASTVisitor {
     case f: Call =>
       re { ctx =>
         for {
-          // _ <- f.typeCheck(ctx.globalScope, Map.empty) FIXME いらないはず
+          _ <- TypeCheck[Call].check(f, ctx.globalScope, Map.empty) // call args type check.
           value <- Eval[Call].eval(f, ctx.globalScope, ctx)
           ret <- value match {
                   case ff: SIMQLFunction =>

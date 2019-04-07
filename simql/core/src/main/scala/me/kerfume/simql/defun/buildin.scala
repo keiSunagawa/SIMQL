@@ -15,12 +15,6 @@ object buildin {
   private[this] def getArg[T <: Expr](key: String, scope: Scope, ctx: QueryContext): Result[T] =
     Eval[Value].eval(scope(key), scope, ctx).map(_.asInstanceOf[T])
 
-  trait BuildInFunction extends SIMQLFunction {
-    val body: List[Bind] = Nil
-    val returnValue: Expr = NullLit
-    val outerScope: Scope = Map.empty
-  }
-
   private[this] def unevalArgsFunction(
     name: String,
     args: List[FunctionParam],
@@ -34,9 +28,6 @@ object buildin {
       override val returnType: SIMQLType = implReturnType
 
       override def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr] = _apply(scope, ctx)
-
-      override def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] =
-        Right(FunctionType(this.param.tpe, this.returnType))
     }
     args.init.foldRight[SIMQLFunction](impl) {
       case (p, next) =>
@@ -137,9 +128,6 @@ object buildin {
 
       override def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr] =
         c.convert(params, scope, ctx).flatMap(_apply(_)(ctx))
-
-      override def typeCheck(scope: Scope, paramMap: TypeMap): Result[SIMQLType] =
-        Right(FunctionType(this.param.tpe, this.returnType))
     }
     paramList.init.foldRight[SIMQLFunction](impl) {
       case (p, next) =>
