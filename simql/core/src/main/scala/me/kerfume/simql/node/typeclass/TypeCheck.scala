@@ -51,17 +51,45 @@ object TypeCheck {
                   case (tpe, arg) =>
                     tpe match {
                       case f: FunctionType =>
-                        val f2 =
-                          if (f.paramType == Generics || f.paramType == ListType(Generics)) {
-                            f.resolveGenerics(arg)
-                          } else f
-                        Either.cond(
-                          f2.paramType.isSameType(arg),
-                          f2.returnType,
-                          UnhandleError(
-                            s"unmatch args type. key: ${a.symbol}, found: ${arg}, require: ${f2.paramType}"
-                          )
-                        )
+                        for {
+                          f2 <- f.paramType match {
+                                 case g: Generics => Right(f.resolveGenerics(g, arg))
+                                 case ListType(g: Generics) =>
+                                   arg match {
+                                     case ListType(r) => Right(f.resolveGenerics(g, r))
+                                     case _ =>
+                                       Left(
+                                         UnhandleError(
+                                           s"unmatch args type. key: ${a.symbol}, found: ${arg}, require: ${f.paramType}"
+                                         )
+                                       )
+                                   }
+                                 case ff: FunctionType =>
+                                   ff.getEndGenerigs match {
+                                     case Some(g) =>
+                                       arg match {
+                                         case af: FunctionType =>
+                                           val resolveTo = af.getEndType // TODO resolveToがGenericsだった場合は例外で対処してる
+                                           Right(f.resolveGenerics(g, resolveTo))
+                                         case _ =>
+                                           Left(
+                                             UnhandleError(
+                                               s"unmatch args type. key: ${a.symbol}, found: ${arg}, require: ${f.paramType}"
+                                             )
+                                           )
+                                       }
+                                     case None => Right(f)
+                                   }
+                                 case _ => Right(f)
+                               }
+                          _ <- Either.cond(
+                                f2.paramType.isSameType(arg),
+                                (),
+                                UnhandleError(
+                                  s"unmatch args type. key: ${a.symbol}, found: ${arg}, require: ${f2.paramType}"
+                                )
+                              )
+                        } yield f2.returnType
                       case _ => Left(UnhandleError("args to many."))
                     }
                 }
@@ -83,7 +111,7 @@ object TypeCheck {
               .flatMap(identity) // ひどい…
     } yield {
       tpe match {
-        case Generics =>
+        case _: Generics =>
           println(s"== ret generics to ${a.symbol} ==")
           tpe
         case other => other
@@ -113,7 +141,11 @@ object TypeCheck {
                    TypeCheck[Expr].check(b.value, lscope, acm).map(tpe => acm + (b.symbol -> tpe))
                }
       tpe <- TypeCheck[Expr].check(a.returnValue, scope, binded)
-      _ <- Either.cond(a.returnType.isSameType(tpe), (), UnhandleError(s"function return type error. key: ${a.key}"))
+      _ <- Either.cond(
+            a.returnType.isSameType(tpe),
+            (),
+            UnhandleError(s"function return type error. key: ${a.key}, found: ${tpe}, require: ${a.returnType}")
+          )
     } yield FunctionType(a.param.tpe, a.returnType)
   }
   implicit val functionTC: TypeCheck[SIMQLFunction] = instance { (a, scope, paramMap) =>

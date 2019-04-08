@@ -85,7 +85,7 @@ case class Thunk(value: Expr, scope: Scope) extends Value
 case class Pure(value: Expr) extends Value
 sealed trait SIMQLType {
   val subType: List[SIMQLType] = Nil
-  def isSameType(that: SIMQLType): Boolean = this == that || subType.contains(that) || that == Generics
+  def isSameType(that: SIMQLType): Boolean = this == that || subType.contains(that)
 }
 sealed trait ElemType extends SIMQLType
 case object StringType extends ElemType
@@ -98,25 +98,39 @@ case object ExprType extends ElemType {
 }
 case class ListType(elemType: SIMQLType) extends SIMQLType
 case class FunctionType(paramType: SIMQLType, returnType: SIMQLType) extends SIMQLType {
-  def resolveGenerics(tpe: SIMQLType): FunctionType = tpe match {
-    case Generics => throw new RuntimeException("invalid input can't resolve generics in Generics")
+  def getEndType: SIMQLType = returnType match {
+    case f: FunctionType => f.getEndType
+    case other           => other
+  }
+  def getEndGenerigs: Option[Generics] = getEndType match {
+    case g: Generics           => Some(g)
+    case ListType(g: Generics) => Some(g)
+    case _                     => None
+  }
+  def resolveGenerics(g: Generics, resolveTo: SIMQLType): FunctionType = resolveTo match {
+    case _: Generics => throw new RuntimeException("invalid input can't resolve generics in Generics")
     case other =>
       val param = paramType match {
-        case Generics           => other
-        case ListType(Generics) => ListType(other)
-        case prm                => prm
+        case g2: Generics if g.isEqual(g2)           => other
+        case ListType(g2: Generics) if g.isEqual(g2) => ListType(other)
+        case f: FunctionType                         => f.resolveGenerics(g, resolveTo)
+        case prm                                     => prm
       }
       val ret = returnType match {
-        case Generics           => other
-        case f: FunctionType    => f.resolveGenerics(other)
-        case ListType(Generics) => ListType(other)
-        case prm                => prm
+        case g2: Generics if g.isEqual(g2)           => other
+        case ListType(g2: Generics) if g.isEqual(g2) => ListType(other)
+        case f: FunctionType                         => f.resolveGenerics(g, resolveTo)
+        case prm                                     => prm
       }
       FunctionType(param, ret)
   }
 }
-case object Generics extends SIMQLType {
-  override def isSameType(that: SIMQLType): Boolean = true
+class Generics extends SIMQLType {
+  override def isSameType(that: SIMQLType): Boolean = false
+  def isEqual(that: Generics): Boolean = this == that
+}
+object Generics {
+  def gen(): Generics = new Generics
 }
 
 case class SIMQLList(elems: List[Expr], elemType: SIMQLType) extends Atomic

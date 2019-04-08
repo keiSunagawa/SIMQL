@@ -30,4 +30,14 @@ define {
     }
     $bind_three($dbg($x))
   }
+  defun map_test(x: Number) => List<Number> {
+    let n = nil<Number>
+    let xs = $cons(2, $cons(3, $cons($x, $n)))
+    let f2 = (acm: List<Number>, x: Number) => List<Number> {
+      let xx = $add($x, 1)
+      $cons($xx, $acm)
+    }
+    let init = nil<Number>
+    $fold($xs, $init, $f2)
+  }
 }

@@ -6,6 +6,8 @@ import me.kerfume.simql.node.SIMQLFunction._
 import me.kerfume.simql.node._
 import me.kerfume.simql.node.typeclass.Eval
 import shapeless._
+import me.kerfume.simql.functions._
+import cats.instances.list._
 
 object buildin {
   val functions: Scope = (calc.values ++ context.values ++ list.values ++ control.values ++ develop.values)
@@ -66,7 +68,7 @@ object buildin {
     implicit val exprC: ExprType.type \:> Expr = simqlTypeC[ExprType.type, Expr]
     implicit val listC: ListType \:> SIMQLList = simqlTypeC[ListType, SIMQLList]
     implicit val funC: FunctionType \:> SIMQLFunction = simqlTypeC[FunctionType, SIMQLFunction]
-    implicit val genC: Generics.type \:> Expr = simqlTypeC[Generics.type, Expr] // genericsは実質AnyなのでExprで型を潰す
+    implicit val genC: Generics \:> Expr = simqlTypeC[Generics, Expr] // genericsは実質AnyなのでExprで型を潰す
 
     implicit val hnilC: Converter.AUX[HNil, HNil] = new Converter[HNil] {
       type O = HNil
@@ -171,13 +173,16 @@ object buildin {
         Right(SymbolLit(a.label + b.label))
       }
 
-    val Eq = evalArgsFunction(
-      name = "eq",
-      params = "a" \> Generics :: "b" \> Generics :: HNil,
-      retType = BooleanType
-    ) { args: Expr :: Expr :: HNil => _ =>
-      val a :: b :: _ = args
-      Right(BooleanLit(a == b))
+    val Eq = {
+      val T = Generics.gen()
+      evalArgsFunction(
+        name = "eq",
+        params = "a" \> T :: "b" \> T :: HNil,
+        retType = BooleanType
+      ) { args: Expr :: Expr :: HNil => _ =>
+        val a :: b :: _ = args
+        Right(BooleanLit(a == b))
+      }
     }
 
     val Not = evalArgsFunction(
@@ -192,28 +197,48 @@ object buildin {
   }
 
   object list {
-    val Cons = evalArgsFunction(
-      name = "cons",
-      params = "x" \> Generics :: "xs" \> ListType(Generics) :: HNil,
-      retType = ListType(Generics)
-    ) { args: Expr :: SIMQLList :: HNil => ctx =>
-      val x :: xs :: _ = args
-      val consed = xs.copy(elems = x :: xs.elems)
-      Right(consed)
+    val Cons = {
+      val T = Generics.gen()
+      evalArgsFunction(
+        name = "cons",
+        params = "x" \> T :: "xs" \> ListType(T) :: HNil,
+        retType = ListType(T)
+      ) { args: Expr :: SIMQLList :: HNil => ctx =>
+        val x :: xs :: _ = args
+        val consed = xs.copy(elems = x :: xs.elems)
+        Right(consed)
+      }
+    }
+    val Fold = { // あとで消す
+      val A = Generics.gen()
+      val B = Generics.gen()
+      evalArgsFunction(
+        name = "fold",
+        params = "xs" \> ListType(A) :: "init" \> B :: "f" \> FunctionType(B, FunctionType(A, B)) :: HNil,
+        retType = B
+      ) { args: SIMQLList :: Expr :: SIMQLFunction :: HNil => ctx =>
+        val xs :: init :: f :: _ = args
+        for {
+          ys <- xs.elems.foldE(init) { case (acm, e) => f(List(Pure(acm), Pure(e)), ctx) }
+        } yield ys
+      }
     }
 
-    val values = List(Cons)
+    val values = List(Cons, Fold)
   }
 
   object control {
-    val If = unevalArgsFunction(
-      "if",
-      List(FunctionParam("cond", BooleanType), FunctionParam("then", Generics), FunctionParam("else", Generics)),
-      Generics
-    ) { (scope, ctx) =>
-      getArg[BooleanLit]("cond", scope, ctx).flatMap { cond =>
-        if (cond.value) getArg[Expr]("then", scope, ctx)
-        else getArg[Expr]("else", scope, ctx)
+    val If = {
+      val T = Generics.gen()
+      unevalArgsFunction(
+        "if",
+        List(FunctionParam("cond", BooleanType), FunctionParam("then", T), FunctionParam("else", T)),
+        T
+      ) { (scope, ctx) =>
+        getArg[BooleanLit]("cond", scope, ctx).flatMap { cond =>
+          if (cond.value) getArg[Expr]("then", scope, ctx)
+          else getArg[Expr]("else", scope, ctx)
+        }
       }
     }
 
@@ -238,11 +263,13 @@ object buildin {
   }
 
   object develop {
-    val Debug = evalArgsFunction(name = "dbg", params = "value" \> Generics :: HNil, retType = Generics) {
-      args: Expr :: HNil => _ =>
+    val Debug = {
+      val T = Generics.gen()
+      evalArgsFunction(name = "dbg", params = "value" \> T :: HNil, retType = T) { args: Expr :: HNil => _ =>
         val value = args.head
         println(value)
         Right(value)
+      }
     }
 
     val values = List(Debug)
