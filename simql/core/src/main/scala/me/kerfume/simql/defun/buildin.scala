@@ -219,7 +219,7 @@ object buildin {
         Right(consed)
       }
     }
-    val Fold = { // あとで消す
+    val Fold = {
       val A = Generics("A")
       val B = Generics("B")
       evalArgsFunction(
@@ -271,7 +271,8 @@ object buildin {
   }
   object constants {
     val SingleDot = "single_dot" -> Pure(SymbolLit("."))
-    val values: Scope = Map(SingleDot)
+    val EmptySymbol = "empty_symbol" -> Pure(SymbolLit(""))
+    val values: Scope = Map(SingleDot, EmptySymbol)
   }
 
   object develop {

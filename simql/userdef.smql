@@ -44,10 +44,10 @@ define {
     let n = nil<Symbol>
     let xs = $cons(a, $cons(b, $cons(c, $n)))
     let xs = $identity($reverse($xs))
-    let f2 = (s: Symbol, next: Symbol) => Symbol {
+    let f = (s: Symbol, next: Symbol) => Symbol {
       $csm($s, $next)
     }
-    let xs = $fold($xs, z, $f2)
+    let xs = $fold($xs, z, $f)
     $csm($xs, $x)
   }
 }
