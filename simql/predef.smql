@@ -18,4 +18,14 @@ define {
     let lk = $cst("%", $lk)
     q{ $`? LIKE(?)`($col, $keyword) }
   }
+  defun identity<A>(a: A) => A {
+    $a
+  }
+  defun reverse<E>(xs: List<E>) => List<E> {
+    let id = (xs2: List<E>, next: E) => List<E> {
+      $cons($next, $xs2)
+    }
+    let init = nil<E>
+    $fold($xs, $init, $id)
+  }
 }

@@ -4,8 +4,9 @@ import cats.instances.list._
 import me.kerfume.simql._
 import me.kerfume.simql.functions._
 import me.kerfume.simql.node.SIMQLFunction.TypeMap
-import me.kerfume.simql.node.{typeclass => _, _}
+import me.kerfume.simql.node._
 import simulacrum._
+import TypeTree._
 
 @typeclass trait TypeCheck[A] {
   def check(a: A, scope: Scope, paramMap: TypeMap): Result[SIMQLType]
@@ -44,56 +45,49 @@ object TypeCheck {
     } yield ExprType
   }
   implicit val callTc: TypeCheck[Call] = instance { (a, scope, paramMap) =>
+    def typeMismatch(found: SIMQLType, require: SIMQLType): SIMQLError = UnhandleError(s"type mismatch. key: ${a.symbol}, found: $found, require: $require")
+    def probeGenerics(pTree: TypeTree, aTree: TypeTree): Option[Map[Generics, SIMQLType]] = {
+      (pTree, aTree) match {
+        case (Has0(g: Generics), resolveTo) => Some(Map(g -> resolveTo.toType))
+        case (Has0(_), _) => Some(Map.empty)
+        case (Has1(_, pTree1), Has1(_, aTree1)) => probeGenerics(pTree1, aTree1)
+        case (Has2(_, pTree1, pTree2), Has2(_, aTree1, aTree2)) =>
+          for {
+            m1 <- probeGenerics(pTree1, aTree1)
+            m2 <- probeGenerics(pTree2, aTree2)
+          } yield m1 ++ m2
+        case _ => None
+      }
+    }
+    def replaceGenerics(tree: TypeTree, gmap: Map[Generics, SIMQLType]): SIMQLType = {
+      def replace(tree: TypeTree): TypeTree = {
+        tree match {
+          case Has0(g: Generics) =>
+            val replaced = gmap.getOrElse(g, g) // when unresolved generics, take identity
+            Has0(replaced)
+          case other: Has0 => other
+          case Has1(c, tpe) => Has1(c, replace(tpe))
+          case Has2(c, tpe1, tpe2) => Has2(c, replace(tpe1), replace(tpe2))
+        }
+      }
+      replace(tree).toType
+    }
     def refTypeCheck(tpe: SIMQLType, typeArgs: List[SIMQLType]): Result[SIMQLType] = tpe match {
       case f: FunctionType =>
-        for {
-          ret <- typeArgs.foldE[SIMQLError, SIMQLType](f) {
-                  case (tpe, arg) =>
-                    tpe match {
-                      case f: FunctionType =>
-                        for {
-                          f2 <- f.paramType match {
-                                 case g: Generics => Right(f.resolveGenerics(g, arg))
-                                 case ListType(g: Generics) =>
-                                   arg match {
-                                     case ListType(r) => Right(f.resolveGenerics(g, r))
-                                     case _ =>
-                                       Left(
-                                         UnhandleError(
-                                           s"unmatch args type. key: ${a.symbol}, found: ${arg}, require: ${f.paramType}"
-                                         )
-                                       )
-                                   }
-                                 case ff: FunctionType =>
-                                   ff.getEndGenerigs match {
-                                     case Some(g) =>
-                                       arg match {
-                                         case af: FunctionType =>
-                                           val resolveTo = af.getEndType // TODO resolveToがGenericsだった場合は例外で対処してる
-                                           Right(f.resolveGenerics(g, resolveTo))
-                                         case _ =>
-                                           Left(
-                                             UnhandleError(
-                                               s"unmatch args type. key: ${a.symbol}, found: ${arg}, require: ${f.paramType}"
-                                             )
-                                           )
-                                       }
-                                     case None => Right(f)
-                                   }
-                                 case _ => Right(f)
-                               }
-                          _ <- Either.cond(
-                                f2.paramType.isSameType(arg),
-                                (),
-                                UnhandleError(
-                                  s"unmatch args type. key: ${a.symbol}, found: ${arg}, require: ${f2.paramType}"
-                                )
-                              )
-                        } yield f2.returnType
-                      case _ => Left(UnhandleError("args to many."))
-                    }
-                }
-        } yield ret
+        typeArgs.foldE[SIMQLError, SIMQLType](f) { case (tpe, arg) =>
+          tpe match {
+            case f: FunctionType =>
+              val paramTree = ToTypeTree[SIMQLType].toTree(f.paramType)
+              val argTree = ToTypeTree[SIMQLType].toTree(arg)
+              val error = typeMismatch(f.paramType, arg)
+              for {
+                genericsMap <- probeGenerics(paramTree, argTree).toRight(error)
+                resolvedP = replaceGenerics(paramTree, genericsMap)
+                _ <- Either.cond(resolvedP == arg, (), error)
+              } yield replaceGenerics(ToTypeTree[SIMQLType].toTree(f.returnType), genericsMap)
+            case _ => Left(UnhandleError("args to many."))
+         }
+        }
       case _ => Either.cond(typeArgs.isEmpty, tpe, UnhandleError("var not apply args."))
     }
     for {
@@ -109,14 +103,7 @@ object TypeCheck {
               .orElse(paramMap.get(a.symbol).map(refTypeCheck(_, typeArgs)))
               .toRight(UnhandleError(s"type check: function not found. key: ${a.symbol}"))
               .flatMap(identity) // ひどい…
-    } yield {
-      tpe match {
-        case _: Generics =>
-          println(s"== ret generics to ${a.symbol} ==")
-          tpe
-        case other => other
-      }
-    }
+    } yield tpe
   }
   implicit val listTC: TypeCheck[SIMQLList] = instance { (a, scope, paramMap) =>
     a.elems

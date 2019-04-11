@@ -20,21 +20,25 @@ object buildin {
   private[this] def unevalArgsFunction(
     name: String,
     args: List[FunctionParam],
-    implReturnType: SIMQLType
+    implReturnType: SIMQLType,
+    generics: List[Generics] = Nil
   )(
     _apply: (Scope, QueryContext) => Result[Expr]
   ): SIMQLFunction = {
+    val (last, init) = (args.last, args.init)
     val impl = new BuildInFunction {
       override val key: String = name
-      override val param: FunctionParam = args.last
+      override val param: FunctionParam = last
       override val returnType: SIMQLType = implReturnType
+      override val defGenerics = if (init.isEmpty) generics else Nil
 
       override def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr] = _apply(scope, ctx)
     }
-    args.init.foldRight[SIMQLFunction](impl) {
+    init.foldRight[SIMQLFunction](impl) {
       case (p, next) =>
         val nextType = FunctionType(next.param.tpe, next.returnType)
-        Closure(key = name, param = p, returnType = nextType, body = Nil, returnValue = next)
+        val gs =  if (init.last == p) generics else Nil
+        Closure(key = name, param = p, returnType = nextType, body = Nil, returnValue = next, defGenerics = generics)
     }
   }
 
@@ -115,7 +119,8 @@ object buildin {
   private[this] def evalArgsFunction[Param <: HList, Arg](
     name: String,
     params: Param,
-    retType: SIMQLType
+    retType: SIMQLType,
+    generics: List[Generics] = Nil
   )(
     _apply: Arg => QueryContext => Result[Expr]
   )(
@@ -123,18 +128,21 @@ object buildin {
     tl: ToList[Param]
   ): SIMQLFunction = {
     val paramList = tl.toList(params)
+    val (last, init) = (paramList.last, paramList.init)
     val impl = new BuildInFunction {
       override val key: String = name
-      override val param: FunctionParam = paramList.last
+      override val param: FunctionParam = last
       override val returnType: SIMQLType = retType
+      override val defGenerics = if (init.isEmpty) generics else Nil
 
       override def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr] =
         c.convert(params, scope, ctx).flatMap(_apply(_)(ctx))
     }
-    paramList.init.foldRight[SIMQLFunction](impl) {
+    init.foldRight[SIMQLFunction](impl) {
       case (p, next) =>
         val nextType = FunctionType(next.param.tpe, next.returnType)
-        Closure(key = name, param = p, returnType = nextType, body = Nil, returnValue = next)
+        val gs =  if (init.last == p) generics else Nil
+        Closure(key = name, param = p, returnType = nextType, body = Nil, returnValue = next, defGenerics = gs)
     }
   }
 
@@ -174,11 +182,12 @@ object buildin {
       }
 
     val Eq = {
-      val T = Generics.gen()
+      val T = Generics("T")
       evalArgsFunction(
         name = "eq",
         params = "a" \> T :: "b" \> T :: HNil,
-        retType = BooleanType
+        retType = BooleanType,
+        generics = T :: Nil
       ) { args: Expr :: Expr :: HNil => _ =>
         val a :: b :: _ = args
         Right(BooleanLit(a == b))
@@ -198,11 +207,12 @@ object buildin {
 
   object list {
     val Cons = {
-      val T = Generics.gen()
+      val T = Generics("T")
       evalArgsFunction(
         name = "cons",
         params = "x" \> T :: "xs" \> ListType(T) :: HNil,
-        retType = ListType(T)
+        retType = ListType(T),
+        generics = T :: Nil
       ) { args: Expr :: SIMQLList :: HNil => ctx =>
         val x :: xs :: _ = args
         val consed = xs.copy(elems = x :: xs.elems)
@@ -210,12 +220,13 @@ object buildin {
       }
     }
     val Fold = { // あとで消す
-      val A = Generics.gen()
-      val B = Generics.gen()
+      val A = Generics("A")
+      val B = Generics("B")
       evalArgsFunction(
         name = "fold",
         params = "xs" \> ListType(A) :: "init" \> B :: "f" \> FunctionType(B, FunctionType(A, B)) :: HNil,
-        retType = B
+        retType = B,
+        generics = A :: B :: Nil
       ) { args: SIMQLList :: Expr :: SIMQLFunction :: HNil => ctx =>
         val xs :: init :: f :: _ = args
         for {
@@ -229,11 +240,12 @@ object buildin {
 
   object control {
     val If = {
-      val T = Generics.gen()
+      val T = Generics("T")
       unevalArgsFunction(
         "if",
         List(FunctionParam("cond", BooleanType), FunctionParam("then", T), FunctionParam("else", T)),
-        T
+        T,
+        generics = T :: Nil
       ) { (scope, ctx) =>
         getArg[BooleanLit]("cond", scope, ctx).flatMap { cond =>
           if (cond.value) getArg[Expr]("then", scope, ctx)
@@ -264,8 +276,13 @@ object buildin {
 
   object develop {
     val Debug = {
-      val T = Generics.gen()
-      evalArgsFunction(name = "dbg", params = "value" \> T :: HNil, retType = T) { args: Expr :: HNil => _ =>
+      val T = Generics("T")
+      evalArgsFunction(
+        name = "dbg",
+        params = "value" \> T :: HNil,
+        retType = T,
+        generics = T :: Nil
+      ) { args: Expr :: HNil => _ =>
         val value = args.head
         println(value)
         Right(value)

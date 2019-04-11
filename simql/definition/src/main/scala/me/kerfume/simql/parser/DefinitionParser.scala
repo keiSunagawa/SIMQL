@@ -13,6 +13,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
     case "Raw"     => RawType
     case "Expr"    => ExprType
   }
+  def generics: Parser[Generics] = "[A-Z]*".r ^^ { Generics(_) }
   def listType: Parser[ListType] = "List<" ~> simqlType <~ ">" ^^ { ListType(_) }
   def atomicType: Parser[SIMQLType] = lowerType | listType | ("(" ~> functionType <~ ")")
   def functionType: Parser[SIMQLType] = (atomicType <~ "=>") ~ atomicType ~ rep("=>" ~> atomicType) ^^ {
@@ -26,7 +27,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
         }
       } else FunctionType(f, t)
   }
-  def simqlType: Parser[SIMQLType] = functionType | atomicType
+  def simqlType: Parser[SIMQLType] = functionType | atomicType | generics
 
   def functionParam: Parser[FunctionParam] = (symbol <~ ":") ~ simqlType ^^ {
     case s ~ tpe => FunctionParam(s.label, tpe)
@@ -44,9 +45,10 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
   }
 
   def function =
-    ("(" ~> functionParam ~ rep("," ~> functionParam) <~ ")") ~ ("=>" ~> simqlType <~ "{") ~ (rep(bind) ~ dexpr <~ "}")
+    opt("<"~>(generics~rep(","~>generics))<~">") ~ ("(" ~> functionParam ~ rep("," ~> functionParam) <~ ")") ~ ("=>" ~> simqlType <~ "{") ~ (rep(bind) ~ dexpr <~ "}")
   def closure: Parser[Closure] = function ^^ {
-    case ps ~ retType ~ block =>
+    case gs ~ ps ~ retType ~ block =>
+      val generics = gs.toList.flatMap { case h~t => h :: t }
       val bd ~ retNode = block
       val pList = {
         val ph ~ pt = ps
@@ -55,19 +57,32 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
       val plast = pList.last
       val pInit = pList.init
 
-      val last = Closure(param = plast, returnType = retType, body = bd, returnValue = retNode)
+      val last = Closure(
+        param = plast,
+        returnType = retType,
+        body = bd,
+        returnValue = retNode,
+        defGenerics = if(pInit.isEmpty) generics else Nil
+      )
 
       pInit.foldRight(last) {
         case (p, next) =>
           val nextType = FunctionType(next.param.tpe, next.returnType)
-          Closure(param = p, returnType = nextType, body = Nil, returnValue = next)
+          Closure(
+            param = p,
+            returnType = nextType,
+            body = Nil,
+            returnValue = next,
+            defGenerics = if (pInit.last == p) generics else Nil
+          )
       }
   }
 
   def defun: Parser[UserFunction] =
     ("defun" ~> symbol) ~ function ^^ {
       case s ~ f =>
-        val ps ~ retType ~ block = f
+        val gs ~ ps ~ retType ~ block = f
+        val generics = gs.toList.flatMap { case h~t => h :: t }
         val bd ~ retNode = block
         val pList = {
           val ph ~ pt = ps
@@ -76,12 +91,26 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
         val plast = pList.last
         val pInit = pList.init
 
-        val last = Closure(key = s.label, param = plast, returnType = retType, body = bd, returnValue = retNode)
+        val last = Closure(
+          key = s.label,
+          param = plast,
+          returnType = retType,
+          body = bd,
+          returnValue = retNode,
+          defGenerics = if (pInit.isEmpty) generics else Nil
+        )
 
         pInit.foldRight(last) {
           case (p, next) =>
             val nextType = FunctionType(next.param.tpe, next.returnType)
-            Closure(key = s.label, param = p, returnType = nextType, body = Nil, returnValue = next)
+            Closure(
+              key = s.label,
+              param = p,
+              returnType = nextType,
+              body = Nil,
+              returnValue = next,
+              defGenerics = if (pInit.last == p) generics else Nil
+            )
         }
     }
 

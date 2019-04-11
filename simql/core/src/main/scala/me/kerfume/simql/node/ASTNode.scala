@@ -108,30 +108,26 @@ case class FunctionType(paramType: SIMQLType, returnType: SIMQLType) extends SIM
     case _                     => None
   }
   def resolveGenerics(g: Generics, resolveTo: SIMQLType): FunctionType = resolveTo match {
-    case _: Generics => throw new RuntimeException("invalid input can't resolve generics in Generics")
+    // case g: Generics => throw new RuntimeException("invalid input can't resolve generics in Generics")
     case other =>
+      println(s"resolveTo: $resolveTo")
+      println(s"paramType: $paramType")
       val param = paramType match {
-        case g2: Generics if g.isEqual(g2)           => other
-        case ListType(g2: Generics) if g.isEqual(g2) => ListType(other)
+        case g2: Generics if g == g2           => other
+        case ListType(g2: Generics) if g == g2 => ListType(other)
         case f: FunctionType                         => f.resolveGenerics(g, resolveTo)
         case prm                                     => prm
       }
       val ret = returnType match {
-        case g2: Generics if g.isEqual(g2)           => other
-        case ListType(g2: Generics) if g.isEqual(g2) => ListType(other)
+        case g2: Generics if g == g2           => other
+        case ListType(g2: Generics) if g == g2 => ListType(other)
         case f: FunctionType                         => f.resolveGenerics(g, resolveTo)
         case prm                                     => prm
       }
       FunctionType(param, ret)
   }
 }
-class Generics extends SIMQLType {
-  override def isSameType(that: SIMQLType): Boolean = false
-  def isEqual(that: Generics): Boolean = this == that
-}
-object Generics {
-  def gen(): Generics = new Generics
-}
+case class Generics(symbol: String) extends SIMQLType
 
 case class SIMQLList(elems: List[Expr], elemType: SIMQLType) extends Atomic
 
@@ -142,17 +138,19 @@ sealed trait SIMQLFunction extends Atomic { self =>
   val param: FunctionParam
   val returnType: SIMQLType
   val outerScope: Scope
+  val defGenerics: List[Generics]
 
   val body: List[Bind]
   val returnValue: Expr
 
-  def setOuterScope(scope: Scope): SIMQLFunction = new UserFunction {
+  def setOuterScope(scope: Scope): SIMQLFunction = new UserFunction { // SIMQLFunctionの型網羅性を保持するためにUserFunctionでnew
     override val key: String = self.key
     override val param: FunctionParam = self.param
     override val returnType: SIMQLType = self.returnType
     override val outerScope: Scope = self.outerScope ++ scope
     override val body: List[Bind] = self.body
     override val returnValue: Expr = self.returnValue
+    override val defGenerics = self.defGenerics
 
     override def apply0(scope: Scope, ctx: QueryContext, nextArgs: List[Value]): Result[Expr] =
       self.apply0(scope, ctx, nextArgs)
@@ -196,6 +194,7 @@ case class Closure(
   body: List[Bind],
   returnType: SIMQLType,
   returnValue: Expr,
+  defGenerics: List[Generics],
   outerScope: Scope = Map.empty)
     extends UserFunction
 
