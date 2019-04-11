@@ -37,7 +37,7 @@ object buildin {
     init.foldRight[SIMQLFunction](impl) {
       case (p, next) =>
         val nextType = FunctionType(next.param.tpe, next.returnType)
-        val gs =  if (init.last == p) generics else Nil
+        val gs = if (init.last == p) generics else Nil
         Closure(key = name, param = p, returnType = nextType, body = Nil, returnValue = next, defGenerics = generics)
     }
   }
@@ -141,7 +141,7 @@ object buildin {
     init.foldRight[SIMQLFunction](impl) {
       case (p, next) =>
         val nextType = FunctionType(next.param.tpe, next.returnType)
-        val gs =  if (init.last == p) generics else Nil
+        val gs = if (init.last == p) generics else Nil
         Closure(key = name, param = p, returnType = nextType, body = Nil, returnValue = next, defGenerics = gs)
     }
   }

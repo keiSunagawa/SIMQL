@@ -15,7 +15,7 @@ object FunctionResolveVisitor extends ASTVisitor {
     case f: Call =>
       re { ctx =>
         for {
-          _ <- TypeCheck[Call].check(f, ctx.globalScope, Map.empty) // call args type check.
+          _ <- TypeCheck[Call].check(f, ctx.typeMap) // call args type check.
           value <- Eval[Call].eval(f, ctx.globalScope, ctx)
           ret <- value match {
                   case ff: SIMQLFunction =>

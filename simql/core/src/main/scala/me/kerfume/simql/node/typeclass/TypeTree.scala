@@ -18,14 +18,18 @@ object ToTypeTree {
   }
   implicit val elemTTT: ToTypeTree[ElemType] = instance { Has0(_) }
   implicit val genericsTTT: ToTypeTree[Generics] = instance { Has0(_) }
-  implicit val listTTT: ToTypeTree[ListType] = instance { case ListType(t) => Has1(ListC, ToTypeTree[SIMQLType].toTree(t)) }
-  implicit val funcTTT: ToTypeTree[FunctionType] = instance { case FunctionType(t1, t2) => Has2(FuncC, ToTypeTree[SIMQLType].toTree(t1), ToTypeTree[SIMQLType].toTree(t2)) }
+  implicit val listTTT: ToTypeTree[ListType] = instance {
+    case ListType(t) => Has1(ListC, ToTypeTree[SIMQLType].toTree(t))
+  }
+  implicit val funcTTT: ToTypeTree[FunctionType] = instance {
+    case FunctionType(t1, t2) => Has2(FuncC, ToTypeTree[SIMQLType].toTree(t1), ToTypeTree[SIMQLType].toTree(t2))
+  }
 
   implicit val allTTT: ToTypeTree[SIMQLType] = instance {
-    case l: ListType => listTTT.toTree(l)
+    case l: ListType     => listTTT.toTree(l)
     case f: FunctionType => funcTTT.toTree(f)
-    case g: Generics => genericsTTT.toTree(g)
-    case e: ElemType => elemTTT.toTree(e)
+    case g: Generics     => genericsTTT.toTree(g)
+    case e: ElemType     => elemTTT.toTree(e)
   }
 }
 

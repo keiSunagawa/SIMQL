@@ -97,36 +97,7 @@ case object ExprType extends ElemType {
   override val subType = List(StringType, BooleanType, SymbolType, NumberType, RawType)
 }
 case class ListType(elemType: SIMQLType) extends SIMQLType
-case class FunctionType(paramType: SIMQLType, returnType: SIMQLType) extends SIMQLType {
-  def getEndType: SIMQLType = returnType match {
-    case f: FunctionType => f.getEndType
-    case other           => other
-  }
-  def getEndGenerigs: Option[Generics] = getEndType match {
-    case g: Generics           => Some(g)
-    case ListType(g: Generics) => Some(g)
-    case _                     => None
-  }
-  def resolveGenerics(g: Generics, resolveTo: SIMQLType): FunctionType = resolveTo match {
-    // case g: Generics => throw new RuntimeException("invalid input can't resolve generics in Generics")
-    case other =>
-      println(s"resolveTo: $resolveTo")
-      println(s"paramType: $paramType")
-      val param = paramType match {
-        case g2: Generics if g == g2           => other
-        case ListType(g2: Generics) if g == g2 => ListType(other)
-        case f: FunctionType                         => f.resolveGenerics(g, resolveTo)
-        case prm                                     => prm
-      }
-      val ret = returnType match {
-        case g2: Generics if g == g2           => other
-        case ListType(g2: Generics) if g == g2 => ListType(other)
-        case f: FunctionType                         => f.resolveGenerics(g, resolveTo)
-        case prm                                     => prm
-      }
-      FunctionType(param, ret)
-  }
-}
+case class FunctionType(paramType: SIMQLType, returnType: SIMQLType) extends SIMQLType
 case class Generics(symbol: String) extends SIMQLType
 
 case class SIMQLList(elems: List[Expr], elemType: SIMQLType) extends Atomic

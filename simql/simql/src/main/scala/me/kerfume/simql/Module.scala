@@ -1,6 +1,7 @@
 package me.kerfume.simql
 
 import me.kerfume.simql.node._
+import me.kerfume.simql.node.typeclass.TypeCheck
 import me.kerfume.simql.analyzer._
 import me.kerfume.simql.parser.Parser
 import me.kerfume.simql.resolver._
@@ -36,15 +37,19 @@ object Module {
       predef <- DefinitionModule.loadPredef()
       userdef <- DefinitionModule.loadUserdef()
       buildin = me.kerfume.simql.defun.buildin.functions
-      gscope <- (predef ++ userdef).foldE(buildin) {
-                 case (s, f) =>
-                   for {
-                     _ <- (new TypeChecker).check(f, s)
-                   } yield s + (f.key -> Pure(f))
-               }
+      gscope = buildin ++ (predef ++ userdef).map(f => f.key -> Pure(f))
+      buildinTypeMap <- buildin.toList.mapE { case (key, f) => TypeCheck[Value].check(f, Map.empty).map(key -> _) }
+                         .map(_.toMap) // FIXME
+      typeMap <- (predef ++ userdef).foldE(buildinTypeMap) {
+                  case (pm, f) =>
+                    for {
+                      tpe <- TypeCheck[SIMQLFunction].check(f, pm)
+                    } yield pm + (f.key -> tpe)
+                }
     } yield
       analyzed.copy(
-        globalScope = gscope
+        globalScope = gscope,
+        typeMap = typeMap
       )
   }
 

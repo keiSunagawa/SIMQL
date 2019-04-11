@@ -13,9 +13,13 @@ package object simql {
   case class UnhandleError(msg: String) extends GlobalError
 
   // plane DTO
-  case class QueryContext(tables: Vector[SymbolLit], globalScope: Scope, target: TranspileTarget)
+  case class QueryContext(
+    tables: Vector[SymbolLit],
+    globalScope: Scope,
+    target: TranspileTarget,
+    typeMap: Map[String, SIMQLType])
   object QueryContext {
-    val empty = QueryContext(Vector.empty, Map.empty, TranspileTarget.MySQL)
+    val empty = QueryContext(Vector.empty, Map.empty, TranspileTarget.MySQL, Map.empty)
   }
   sealed trait TranspileTarget
   object TranspileTarget {

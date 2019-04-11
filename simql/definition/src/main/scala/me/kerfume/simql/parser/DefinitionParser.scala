@@ -45,10 +45,12 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
   }
 
   def function =
-    opt("<"~>(generics~rep(","~>generics))<~">") ~ ("(" ~> functionParam ~ rep("," ~> functionParam) <~ ")") ~ ("=>" ~> simqlType <~ "{") ~ (rep(bind) ~ dexpr <~ "}")
+    opt("<" ~> (generics ~ rep("," ~> generics)) <~ ">") ~ ("(" ~> functionParam ~ rep("," ~> functionParam) <~ ")") ~ ("=>" ~> simqlType <~ "{") ~ (rep(
+      bind
+    ) ~ dexpr <~ "}")
   def closure: Parser[Closure] = function ^^ {
     case gs ~ ps ~ retType ~ block =>
-      val generics = gs.toList.flatMap { case h~t => h :: t }
+      val generics = gs.toList.flatMap { case h ~ t => h :: t }
       val bd ~ retNode = block
       val pList = {
         val ph ~ pt = ps
@@ -62,7 +64,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
         returnType = retType,
         body = bd,
         returnValue = retNode,
-        defGenerics = if(pInit.isEmpty) generics else Nil
+        defGenerics = if (pInit.isEmpty) generics else Nil
       )
 
       pInit.foldRight(last) {
@@ -82,7 +84,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
     ("defun" ~> symbol) ~ function ^^ {
       case s ~ f =>
         val gs ~ ps ~ retType ~ block = f
-        val generics = gs.toList.flatMap { case h~t => h :: t }
+        val generics = gs.toList.flatMap { case h ~ t => h :: t }
         val bd ~ retNode = block
         val pList = {
           val ph ~ pt = ps
