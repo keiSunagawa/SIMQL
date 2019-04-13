@@ -43,6 +43,7 @@ object Module {
       typeMap <- (predef ++ userdef).foldE(buildinTypeMap) {
                   case (pm, f) =>
                     for {
+                      _ <- GenericsChecker.check(f)
                       tpe <- TypeCheck[SIMQLFunction].check(f, pm)
                     } yield pm + (f.key -> tpe)
                 }

@@ -50,4 +50,13 @@ define {
     let xs = $fold($xs, z, $f)
     $csm($xs, $x)
   }
+  defun dup_generics_test<T>(x: T) => T {
+    let f = <X>(y: X) => T {
+      $x
+    }
+    let f2 = <X>(y: X) => T {
+      $x
+    }
+    $f2($x)
+  }
 }
