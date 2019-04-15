@@ -13,11 +13,17 @@ trait Application[F[_]] {
 
   implicit def M: Monad[F]
   def interpreter: Runner.SimqlApp ~> F
+  def predefCompiler: Compiler.Op ~> F
+  def userdefCompiler: Compiler.Op ~> F
   def eventStream: Observable[Event]
 
   lazy val cancelable: Cancelable = eventStream.map {
     case Submit =>
       Runner.program.foldMap(interpreter)
+    case PreDefCompile =>
+      Runner.compile.foldMap(predefCompiler)
+    case UserDefCompile =>
+      Runner.compile.foldMap(userdefCompiler)
   }.subscribe()
 
   def start(): Cancelable = {
@@ -31,4 +37,6 @@ trait Application[F[_]] {
 object Application {
   sealed trait Event
   case object Submit extends Event
+  case object PreDefCompile extends Event
+  case object UserDefCompile extends Event
 }

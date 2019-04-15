@@ -2350,7 +2350,17 @@ function $f_Lme_kerfume_simql_Application__cancelable__Lmonix_execution_Cancelab
         var I$2 = new $c_Lcats_InjectKInstances$$anon$8().init___Lcats_InjectKInstances__Lcats_InjectK(this$4, I$1);
         return jsx$2.program__Lme_kerfume_simql_Presenter$Helper__Lme_kerfume_simql_RDB$Helper__Lcats_free_Free(jsx$1, new $c_Lme_kerfume_simql_RDB$Helper().init___Lcats_InjectK(I$2)).foldMap__Lcats_arrow_FunctionK__Lcats_Monad__O($this.interpreter$1, $this.M$1)
       } else {
-        throw new $c_s_MatchError().init___O(x0$1)
+        var x$3 = $m_Lme_kerfume_simql_Application$PreDefCompile$();
+        if ((x$3 === x0$1)) {
+          return $m_Lme_kerfume_simql_Runner$().compile__Lcats_free_Free().foldMap__Lcats_arrow_FunctionK__Lcats_Monad__O($this.predefCompiler$1, $this.M$1)
+        } else {
+          var x$5 = $m_Lme_kerfume_simql_Application$UserDefCompile$();
+          if ((x$5 === x0$1)) {
+            return $m_Lme_kerfume_simql_Runner$().compile__Lcats_free_Free().foldMap__Lcats_arrow_FunctionK__Lcats_Monad__O($this.userdefCompiler$1, $this.M$1)
+          } else {
+            throw new $c_s_MatchError().init___O(x0$1)
+          }
+        }
       }
     })
   })($thiz))).subscribe__Lmonix_execution_Scheduler__Lmonix_execution_Cancelable($m_Lmonix_execution_Scheduler$().Implicits__Lmonix_execution_schedulers_SchedulerCompanionImpl$Implicits$().global__Lmonix_execution_Scheduler())
@@ -2366,6 +2376,18 @@ function $isArrayOf_Lme_kerfume_simql_Application$Event(obj, depth) {
 }
 function $asArrayOf_Lme_kerfume_simql_Application$Event(obj, depth) {
   return (($isArrayOf_Lme_kerfume_simql_Application$Event(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lme.kerfume.simql.Application$Event;", depth))
+}
+function $is_Lme_kerfume_simql_Compiler$Op(obj) {
+  return (!(!((obj && obj.$classData) && obj.$classData.ancestors.Lme_kerfume_simql_Compiler$Op)))
+}
+function $as_Lme_kerfume_simql_Compiler$Op(obj) {
+  return (($is_Lme_kerfume_simql_Compiler$Op(obj) || (obj === null)) ? obj : $throwClassCastException(obj, "me.kerfume.simql.Compiler$Op"))
+}
+function $isArrayOf_Lme_kerfume_simql_Compiler$Op(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lme_kerfume_simql_Compiler$Op)))
+}
+function $asArrayOf_Lme_kerfume_simql_Compiler$Op(obj, depth) {
+  return (($isArrayOf_Lme_kerfume_simql_Compiler$Op(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lme.kerfume.simql.Compiler$Op;", depth))
 }
 function $is_Lme_kerfume_simql_Presenter$Op(obj) {
   return (!(!((obj && obj.$classData) && obj.$classData.ancestors.Lme_kerfume_simql_Presenter$Op)))
@@ -7599,6 +7621,42 @@ function $m_Lme_kerfume_fileviewer_Presenter$Helper$() {
   return $n_Lme_kerfume_fileviewer_Presenter$Helper$
 }
 /** @constructor */
+function $c_Lme_kerfume_simql_Compiler$Helper$() {
+  $c_O.call(this)
+}
+$c_Lme_kerfume_simql_Compiler$Helper$.prototype = new $h_O();
+$c_Lme_kerfume_simql_Compiler$Helper$.prototype.constructor = $c_Lme_kerfume_simql_Compiler$Helper$;
+/** @constructor */
+function $h_Lme_kerfume_simql_Compiler$Helper$() {
+  /*<skip>*/
+}
+$h_Lme_kerfume_simql_Compiler$Helper$.prototype = $c_Lme_kerfume_simql_Compiler$Helper$.prototype;
+$c_Lme_kerfume_simql_Compiler$Helper$.prototype.init___ = (function() {
+  return this
+});
+$c_Lme_kerfume_simql_Compiler$Helper$.prototype.setCompletion__sci_List__Lcats_free_Free = (function(xs) {
+  var value = new $c_Lme_kerfume_simql_Compiler$SetCompletion().init___sci_List(xs);
+  return new $c_Lcats_free_Free$Suspend().init___O(value)
+});
+$c_Lme_kerfume_simql_Compiler$Helper$.prototype.printError__T__Lcats_free_Free = (function(error) {
+  var value = new $c_Lme_kerfume_simql_Compiler$PrintError().init___T(error);
+  return new $c_Lcats_free_Free$Suspend().init___O(value)
+});
+var $d_Lme_kerfume_simql_Compiler$Helper$ = new $TypeData().initClass({
+  Lme_kerfume_simql_Compiler$Helper$: 0
+}, false, "me.kerfume.simql.Compiler$Helper$", {
+  Lme_kerfume_simql_Compiler$Helper$: 1,
+  O: 1
+});
+$c_Lme_kerfume_simql_Compiler$Helper$.prototype.$classData = $d_Lme_kerfume_simql_Compiler$Helper$;
+var $n_Lme_kerfume_simql_Compiler$Helper$ = (void 0);
+function $m_Lme_kerfume_simql_Compiler$Helper$() {
+  if ((!$n_Lme_kerfume_simql_Compiler$Helper$)) {
+    $n_Lme_kerfume_simql_Compiler$Helper$ = new $c_Lme_kerfume_simql_Compiler$Helper$().init___()
+  };
+  return $n_Lme_kerfume_simql_Compiler$Helper$
+}
+/** @constructor */
 function $c_Lme_kerfume_simql_DefinitionModule$() {
   $c_O.call(this)
 }
@@ -7612,28 +7670,175 @@ $h_Lme_kerfume_simql_DefinitionModule$.prototype = $c_Lme_kerfume_simql_Definiti
 $c_Lme_kerfume_simql_DefinitionModule$.prototype.init___ = (function() {
   return this
 });
-$c_Lme_kerfume_simql_DefinitionModule$.prototype.loadPredef__T__s_util_Either = (function(code) {
-  var this$1 = $m_Lme_kerfume_simql_parser_Parser$().parseDefinition__T__s_Option(code);
-  if (this$1.isEmpty__Z()) {
-    $m_s_package$();
-    var value = new $c_Lme_kerfume_simql_package$UnhandleError().init___T("failed parse.");
-    return new $c_s_util_Left().init___O(value)
+$c_Lme_kerfume_simql_DefinitionModule$.prototype.compile__sc_Seq__s_util_Either = (function(code) {
+  var buildin = $m_Lme_kerfume_simql_defun_buildin$().functions$1;
+  var this$1 = $m_sci_List$();
+  var cbf = this$1.ReusableCBFInstance$2;
+  var e = $as_sci_List($f_sc_TraversableLike__to__scg_CanBuildFrom__O(buildin, cbf));
+  var evidence$1 = $m_Lcats_instances_package$list$().catsStdInstancesForList$1;
+  var evidence$2 = $as_Lcats_MonoidK($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
+  var evidence$3 = $as_Lcats_Applicative($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
+  var this$8 = new $c_Lme_kerfume_simql_functions$FoldableOps().init___O__Lcats_Foldable__Lcats_MonoidK__Lcats_Applicative(e, evidence$1, evidence$2, evidence$3).mapE__F1__s_util_Either(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+    return (function(x0$1$2) {
+      var x0$1 = $as_T2(x0$1$2);
+      if ((x0$1 !== null)) {
+        var key = $as_T(x0$1.$$und1__O());
+        var f = $as_Lme_kerfume_simql_node_Value(x0$1.$$und2__O());
+        $m_Lme_kerfume_simql_node_typeclass_TypeCheck$();
+        var instance = $m_Lme_kerfume_simql_node_typeclass_TypeCheck$().valueTC$1;
+        var this$5 = instance.check__O__sci_Map__s_util_Either(f, $m_sci_Map$EmptyMap$());
+        if ($is_s_util_Right(this$5)) {
+          var x2 = $as_s_util_Right(this$5);
+          var b = x2.value$2;
+          var x$5 = $as_Lme_kerfume_simql_node_SIMQLType(b);
+          return new $c_s_util_Right().init___O(new $c_T2().init___O__O(key, x$5))
+        } else {
+          return this$5
+        }
+      } else {
+        throw new $c_s_MatchError().init___O(x0$1)
+      }
+    })
+  })(this)));
+  if ($is_s_util_Right(this$8)) {
+    var x2$1 = $as_s_util_Right(this$8);
+    var b$1 = x2$1.value$2;
+    var x$6 = $as_sci_List(b$1);
+    var b$2 = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
+    var these = x$6;
+    while ((!these.isEmpty__Z())) {
+      var arg1 = these.head__O();
+      b$2.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1));
+      these = $as_sci_List(these.tail__O())
+    };
+    var this$10 = new $c_s_util_Right().init___O($as_sci_Map(b$2.elems$1))
   } else {
-    $m_s_package$();
-    var value$1 = this$1.get__O();
-    return new $c_s_util_Right().init___O(value$1)
-  }
-});
-$c_Lme_kerfume_simql_DefinitionModule$.prototype.loadUserdef__T__s_util_Either = (function(code) {
-  var this$1 = $m_Lme_kerfume_simql_parser_Parser$().parseDefinition__T__s_Option(code);
-  if (this$1.isEmpty__Z()) {
-    $m_s_package$();
-    var value = new $c_Lme_kerfume_simql_package$UnhandleError().init___T("failed parse.");
-    return new $c_s_util_Left().init___O(value)
+    var this$10 = this$8
+  };
+  if ($is_s_util_Right(this$10)) {
+    var x2$2 = $as_s_util_Right(this$10);
+    var b$3 = x2$2.value$2;
+    var buildinTypeMap = $as_sci_Map(b$3);
+    var e$1 = code.toList__sci_List();
+    var evidence$1$1 = $m_Lcats_instances_package$list$().catsStdInstancesForList$1;
+    var evidence$2$1 = $as_Lcats_MonoidK($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
+    var evidence$3$1 = $as_Lcats_Applicative($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
+    var this$15 = new $c_Lme_kerfume_simql_functions$FoldableOps().init___O__Lcats_Foldable__Lcats_MonoidK__Lcats_Applicative(e$1, evidence$1$1, evidence$2$1, evidence$3$1).mapE__F1__s_util_Either(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
+      return (function(c$2) {
+        var c = $as_T(c$2);
+        var this$12 = $m_Lme_kerfume_simql_parser_Parser$().parseDefinition__T__s_Option(c);
+        if (this$12.isEmpty__Z()) {
+          $m_s_package$();
+          var value = new $c_Lme_kerfume_simql_package$UnhandleError().init___T("failed parse.");
+          return new $c_s_util_Left().init___O(value)
+        } else {
+          $m_s_package$();
+          var value$1 = this$12.get__O();
+          return new $c_s_util_Right().init___O(value$1)
+        }
+      })
+    })(this)));
+    if ($is_s_util_Right(this$15)) {
+      var x2$3 = $as_s_util_Right(this$15);
+      var b$4 = x2$3.value$2;
+      var x$7 = $as_sci_List(b$4);
+      $m_sci_List$();
+      var b$5 = new $c_scm_ListBuffer().init___();
+      var these$1 = x$7;
+      while ((!these$1.isEmpty__Z())) {
+        var arg1$1 = these$1.head__O();
+        var xs = $as_sc_GenTraversableOnce(arg1$1).seq__sc_TraversableOnce();
+        b$5.$$plus$plus$eq__sc_TraversableOnce__scm_ListBuffer(xs);
+        these$1 = $as_sci_List(these$1.tail__O())
+      };
+      var this$17 = new $c_s_util_Right().init___O(b$5.toList__sci_List())
+    } else {
+      var this$17 = this$15
+    };
+    if ($is_s_util_Right(this$17)) {
+      var x2$4 = $as_s_util_Right(this$17);
+      var b$6 = x2$4.value$2;
+      var parsed = $as_sci_List(b$6);
+      var evidence$1$2 = $m_Lcats_instances_package$list$().catsStdInstancesForList$1;
+      var evidence$2$2 = $as_Lcats_MonoidK($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
+      var evidence$3$2 = $as_Lcats_Applicative($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
+      var this$24 = new $c_Lme_kerfume_simql_functions$FoldableOps().init___O__Lcats_Foldable__Lcats_MonoidK__Lcats_Applicative(parsed, evidence$1$2, evidence$2$2, evidence$3$2).foldE__O__F2__s_util_Either(buildinTypeMap, new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this$2) {
+        return (function(x0$2$2, x1$1$2) {
+          var x0$2 = $as_sci_Map(x0$2$2);
+          var x1$1 = $as_Lme_kerfume_simql_node_UserFunction(x1$1$2);
+          var this$19 = $m_Lme_kerfume_simql_checker_GenericsChecker$().check__Lme_kerfume_simql_node_SIMQLFunction__s_util_Either(x1$1);
+          if ($is_s_util_Right(this$19)) {
+            var x2$5 = $as_s_util_Right(this$19);
+            var b$7 = x2$5.value$2;
+            $asUnit(b$7);
+            $m_Lme_kerfume_simql_node_typeclass_TypeCheck$();
+            var instance$1 = $m_Lme_kerfume_simql_node_typeclass_TypeCheck$().functionTC$1;
+            var this$21 = instance$1.check__O__sci_Map__s_util_Either(x1$1, x0$2);
+            if ($is_s_util_Right(this$21)) {
+              var x2$6 = $as_s_util_Right(this$21);
+              var b$8 = x2$6.value$2;
+              var tpe = $as_Lme_kerfume_simql_node_SIMQLType(b$8);
+              var self = x1$1.key__T();
+              return new $c_s_util_Right().init___O(x0$2.$$plus__T2__sci_Map(new $c_T2().init___O__O(self, tpe)))
+            } else {
+              return this$21
+            }
+          } else {
+            return this$19
+          }
+        })
+      })(this)));
+      if ($is_s_util_Right(this$24)) {
+        var x2$7 = $as_s_util_Right(this$24);
+        var b$9 = x2$7.value$2;
+        var typeMap = $as_sci_Map(b$9);
+        var f$3 = (function($this$3) {
+          return (function(f$2) {
+            var f$1 = $as_Lme_kerfume_simql_node_UserFunction(f$2);
+            var self$1 = f$1.key__T();
+            var y = new $c_Lme_kerfume_simql_node_Pure().init___Lme_kerfume_simql_node_Expr(f$1);
+            return new $c_T2().init___O__O(self$1, y)
+          })
+        })(this);
+        var this$27 = $m_sci_List$();
+        var bf = this$27.ReusableCBFInstance$2;
+        if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
+          if ((parsed === $m_sci_Nil$())) {
+            var jsx$1 = $m_sci_Nil$()
+          } else {
+            var arg1$2 = parsed.head__O();
+            var h = new $c_sci_$colon$colon().init___O__sci_List(f$3(arg1$2), $m_sci_Nil$());
+            var t = h;
+            var rest = $as_sci_List(parsed.tail__O());
+            while ((rest !== $m_sci_Nil$())) {
+              var arg1$3 = rest.head__O();
+              var nx = new $c_sci_$colon$colon().init___O__sci_List(f$3(arg1$3), $m_sci_Nil$());
+              t.tl$5 = nx;
+              t = nx;
+              rest = $as_sci_List(rest.tail__O())
+            };
+            var jsx$1 = h
+          }
+        } else {
+          var b$10 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(parsed, bf);
+          var these$2 = parsed;
+          while ((!these$2.isEmpty__Z())) {
+            var arg1$4 = these$2.head__O();
+            b$10.$$plus$eq__O__scm_Builder(f$3(arg1$4));
+            these$2 = $as_sci_List(these$2.tail__O())
+          };
+          var jsx$1 = b$10.result__O()
+        };
+        var self$2 = buildin.$$plus$plus__sc_GenTraversableOnce__sci_Map($as_sc_GenTraversableOnce(jsx$1));
+        return new $c_s_util_Right().init___O(new $c_T2().init___O__O(self$2, typeMap))
+      } else {
+        return this$24
+      }
+    } else {
+      return this$17
+    }
   } else {
-    $m_s_package$();
-    var value$1 = this$1.get__O();
-    return new $c_s_util_Right().init___O(value$1)
+    return this$10
   }
 });
 var $d_Lme_kerfume_simql_DefinitionModule$ = new $TypeData().initClass({
@@ -7664,6 +7869,9 @@ function $h_Lme_kerfume_simql_EventStreamHandler() {
   /*<skip>*/
 }
 $h_Lme_kerfume_simql_EventStreamHandler.prototype = $c_Lme_kerfume_simql_EventStreamHandler.prototype;
+$c_Lme_kerfume_simql_EventStreamHandler.prototype.userdefCompile__V = (function() {
+  this.onNext$1.apply__O__O($m_Lme_kerfume_simql_Application$UserDefCompile$())
+});
 $c_Lme_kerfume_simql_EventStreamHandler.prototype.init___F1__F0__Lme_kerfume_simql_Application = (function(onNext, onComplete, app) {
   this.onNext$1 = onNext;
   this.onComplete$1 = onComplete;
@@ -7673,8 +7881,17 @@ $c_Lme_kerfume_simql_EventStreamHandler.prototype.init___F1__F0__Lme_kerfume_sim
 $c_Lme_kerfume_simql_EventStreamHandler.prototype.$$js$exported$meth$complete__O = (function() {
   this.complete__V()
 });
+$c_Lme_kerfume_simql_EventStreamHandler.prototype.$$js$exported$meth$predefCompile__O = (function() {
+  this.predefCompile__V()
+});
+$c_Lme_kerfume_simql_EventStreamHandler.prototype.$$js$exported$meth$userdefCompile__O = (function() {
+  this.userdefCompile__V()
+});
 $c_Lme_kerfume_simql_EventStreamHandler.prototype.$$js$exported$meth$submit__O = (function() {
   this.submit__V()
+});
+$c_Lme_kerfume_simql_EventStreamHandler.prototype.predefCompile__V = (function() {
+  this.onNext$1.apply__O__O($m_Lme_kerfume_simql_Application$PreDefCompile$())
 });
 $c_Lme_kerfume_simql_EventStreamHandler.prototype.complete__V = (function() {
   var this$1 = this.app$1;
@@ -7687,6 +7904,12 @@ $c_Lme_kerfume_simql_EventStreamHandler.prototype.submit__V = (function() {
 });
 $c_Lme_kerfume_simql_EventStreamHandler.prototype.complete = (function() {
   return this.$$js$exported$meth$complete__O()
+});
+$c_Lme_kerfume_simql_EventStreamHandler.prototype.userdefCompile = (function() {
+  return this.$$js$exported$meth$userdefCompile__O()
+});
+$c_Lme_kerfume_simql_EventStreamHandler.prototype.predefCompile = (function() {
+  return this.$$js$exported$meth$predefCompile__O()
 });
 $c_Lme_kerfume_simql_EventStreamHandler.prototype.submit = (function() {
   return this.$$js$exported$meth$submit__O()
@@ -7732,195 +7955,22 @@ $c_Lme_kerfume_simql_Module$.prototype.init___ = (function() {
 $c_Lme_kerfume_simql_Module$.prototype.makeContext__p1__Lme_kerfume_simql_node_Query__s_Option__s_Option__s_util_Either = (function(ast, predef, userdef) {
   var ctx = $m_Lme_kerfume_simql_package$QueryContext$().empty$1;
   var analyzed = this.analyzer$1.analyze__Lme_kerfume_simql_node_Query__Lme_kerfume_simql_package$QueryContext__Lme_kerfume_simql_package$QueryContext(ast, ctx);
-  if (predef.isEmpty__Z()) {
-    var this$1 = $m_s_None$()
-  } else {
-    var arg1 = predef.get__O();
-    var code = $as_T(arg1);
-    var this$1 = new $c_s_Some().init___O($m_Lme_kerfume_simql_DefinitionModule$().loadPredef__T__s_util_Either(code))
-  };
-  if (this$1.isEmpty__Z()) {
-    $m_s_package$();
-    var value = $m_sci_Nil$();
-    var jsx$1 = new $c_s_util_Right().init___O(value)
-  } else {
-    var jsx$1 = this$1.get__O()
-  };
-  var this$3 = $as_s_util_Either(jsx$1);
-  if ($is_s_util_Right(this$3)) {
-    var x2 = $as_s_util_Right(this$3);
+  var jsx$1 = $m_Lme_kerfume_simql_DefinitionModule$();
+  var this$2 = predef.toList__sci_List();
+  var this$4 = userdef.toList__sci_List();
+  var this$5 = $m_sc_Seq$();
+  var this$6 = jsx$1.compile__sc_Seq__s_util_Either($as_sc_Seq(this$2.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(this$4, this$5.ReusableCBFInstance$2)));
+  if ($is_s_util_Right(this$6)) {
+    var x2 = $as_s_util_Right(this$6);
     var b = x2.value$2;
-    var predef$2 = $as_sci_List(b);
-    if (userdef.isEmpty__Z()) {
-      var this$4 = $m_s_None$()
-    } else {
-      var arg1$1 = userdef.get__O();
-      var code$1 = $as_T(arg1$1);
-      var this$4 = new $c_s_Some().init___O($m_Lme_kerfume_simql_DefinitionModule$().loadUserdef__T__s_util_Either(code$1))
-    };
-    if (this$4.isEmpty__Z()) {
-      $m_s_package$();
-      var value$1 = $m_sci_Nil$();
-      var jsx$2 = new $c_s_util_Right().init___O(value$1)
-    } else {
-      var jsx$2 = this$4.get__O()
-    };
-    var this$6 = $as_s_util_Either(jsx$2);
-    if ($is_s_util_Right(this$6)) {
-      var x2$1 = $as_s_util_Right(this$6);
-      var b$1 = x2$1.value$2;
-      var userdef$1 = $as_sci_List(b$1);
-      var buildin = $m_Lme_kerfume_simql_defun_buildin$().functions$1;
-      var this$7 = $m_sci_List$();
-      var this$11 = $as_sci_List(predef$2.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(userdef$1, this$7.ReusableCBFInstance$2));
-      var f$1 = (function($this) {
-        return (function(f$2) {
-          var f = $as_Lme_kerfume_simql_node_UserFunction(f$2);
-          var self = f.key__T();
-          var y = new $c_Lme_kerfume_simql_node_Pure().init___Lme_kerfume_simql_node_Expr(f);
-          return new $c_T2().init___O__O(self, y)
-        })
-      })(this);
-      var this$10 = $m_sci_List$();
-      var bf = this$10.ReusableCBFInstance$2;
-      if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
-        if ((this$11 === $m_sci_Nil$())) {
-          var jsx$3 = $m_sci_Nil$()
-        } else {
-          var arg1$2 = this$11.head__O();
-          var h = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$2), $m_sci_Nil$());
-          var t = h;
-          var rest = $as_sci_List(this$11.tail__O());
-          while ((rest !== $m_sci_Nil$())) {
-            var arg1$3 = rest.head__O();
-            var nx = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$3), $m_sci_Nil$());
-            t.tl$5 = nx;
-            t = nx;
-            rest = $as_sci_List(rest.tail__O())
-          };
-          var jsx$3 = h
-        }
-      } else {
-        var b$2 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(this$11, bf);
-        var these = this$11;
-        while ((!these.isEmpty__Z())) {
-          var arg1$4 = these.head__O();
-          b$2.$$plus$eq__O__scm_Builder(f$1(arg1$4));
-          these = $as_sci_List(these.tail__O())
-        };
-        var jsx$3 = b$2.result__O()
-      };
-      var gscope = buildin.$$plus$plus__sc_GenTraversableOnce__sci_Map($as_sc_GenTraversableOnce(jsx$3));
-      var this$12 = new $c_s_util_Right().init___O(new $c_T3().init___O__O__O(userdef$1, buildin, gscope))
-    } else {
-      var this$12 = this$6
-    };
-    if ($is_s_util_Right(this$12)) {
-      var x2$2 = $as_s_util_Right(this$12);
-      var b$3 = x2$2.value$2;
-      var x$5 = $as_T3(b$3);
-      if ((x$5 === null)) {
-        throw new $c_s_MatchError().init___O(x$5)
-      };
-      var userdef$2 = $as_sci_List(x$5.$$und1$1);
-      var buildin$1 = $as_sci_Map(x$5.$$und2$1);
-      var gscope$1 = $as_sci_Map(x$5.$$und3$1);
-      var this$13 = $m_sci_List$();
-      var cbf = this$13.ReusableCBFInstance$2;
-      var e = $as_sci_List($f_sc_TraversableLike__to__scg_CanBuildFrom__O(buildin$1, cbf));
-      var evidence$1 = $m_Lcats_instances_package$list$().catsStdInstancesForList$1;
-      var evidence$2 = $as_Lcats_MonoidK($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
-      var evidence$3 = $as_Lcats_Applicative($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
-      var this$20 = new $c_Lme_kerfume_simql_functions$FoldableOps().init___O__Lcats_Foldable__Lcats_MonoidK__Lcats_Applicative(e, evidence$1, evidence$2, evidence$3).mapE__F1__s_util_Either(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
-        return (function(x0$1$2) {
-          var x0$1 = $as_T2(x0$1$2);
-          if ((x0$1 !== null)) {
-            var key = $as_T(x0$1.$$und1__O());
-            var f$3 = $as_Lme_kerfume_simql_node_Value(x0$1.$$und2__O());
-            $m_Lme_kerfume_simql_node_typeclass_TypeCheck$();
-            var instance = $m_Lme_kerfume_simql_node_typeclass_TypeCheck$().valueTC$1;
-            var this$17 = instance.check__O__sci_Map__s_util_Either(f$3, $m_sci_Map$EmptyMap$());
-            if ($is_s_util_Right(this$17)) {
-              var x2$3 = $as_s_util_Right(this$17);
-              var b$4 = x2$3.value$2;
-              var x$3 = $as_Lme_kerfume_simql_node_SIMQLType(b$4);
-              return new $c_s_util_Right().init___O(new $c_T2().init___O__O(key, x$3))
-            } else {
-              return this$17
-            }
-          } else {
-            throw new $c_s_MatchError().init___O(x0$1)
-          }
-        })
-      })(this)));
-      if ($is_s_util_Right(this$20)) {
-        var x2$4 = $as_s_util_Right(this$20);
-        var b$5 = x2$4.value$2;
-        var x$4 = $as_sci_List(b$5);
-        var b$6 = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
-        var these$1 = x$4;
-        while ((!these$1.isEmpty__Z())) {
-          var arg1$5 = these$1.head__O();
-          b$6.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1$5));
-          these$1 = $as_sci_List(these$1.tail__O())
-        };
-        var this$22 = new $c_s_util_Right().init___O($as_sci_Map(b$6.elems$1))
-      } else {
-        var this$22 = this$20
-      };
-      if ($is_s_util_Right(this$22)) {
-        var x2$5 = $as_s_util_Right(this$22);
-        var b$7 = x2$5.value$2;
-        var buildinTypeMap = $as_sci_Map(b$7);
-        var this$23 = $m_sci_List$();
-        var e$1 = predef$2.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(userdef$2, this$23.ReusableCBFInstance$2);
-        var evidence$1$1 = $m_Lcats_instances_package$list$().catsStdInstancesForList$1;
-        var evidence$2$1 = $as_Lcats_MonoidK($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
-        var evidence$3$1 = $as_Lcats_Applicative($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
-        var this$30 = new $c_Lme_kerfume_simql_functions$FoldableOps().init___O__Lcats_Foldable__Lcats_MonoidK__Lcats_Applicative(e$1, evidence$1$1, evidence$2$1, evidence$3$1).foldE__O__F2__s_util_Either(buildinTypeMap, new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this$2) {
-          return (function(x0$2$2, x1$1$2) {
-            var x0$2 = $as_sci_Map(x0$2$2);
-            var x1$1 = $as_Lme_kerfume_simql_node_UserFunction(x1$1$2);
-            var this$25 = $m_Lme_kerfume_simql_checker_GenericsChecker$().check__Lme_kerfume_simql_node_SIMQLFunction__s_util_Either(x1$1);
-            if ($is_s_util_Right(this$25)) {
-              var x2$6 = $as_s_util_Right(this$25);
-              var b$8 = x2$6.value$2;
-              $asUnit(b$8);
-              $m_Lme_kerfume_simql_node_typeclass_TypeCheck$();
-              var instance$1 = $m_Lme_kerfume_simql_node_typeclass_TypeCheck$().functionTC$1;
-              var this$27 = instance$1.check__O__sci_Map__s_util_Either(x1$1, x0$2);
-              if ($is_s_util_Right(this$27)) {
-                var x2$7 = $as_s_util_Right(this$27);
-                var b$9 = x2$7.value$2;
-                var tpe = $as_Lme_kerfume_simql_node_SIMQLType(b$9);
-                var self$1 = x1$1.key__T();
-                return new $c_s_util_Right().init___O(x0$2.$$plus__T2__sci_Map(new $c_T2().init___O__O(self$1, tpe)))
-              } else {
-                return this$27
-              }
-            } else {
-              return this$25
-            }
-          })
-        })(this)));
-        if ($is_s_util_Right(this$30)) {
-          var x2$8 = $as_s_util_Right(this$30);
-          var b$10 = x2$8.value$2;
-          var typeMap = $as_sci_Map(b$10);
-          var x$3$1 = analyzed.tables$1;
-          var x$4$1 = analyzed.target$1;
-          return new $c_s_util_Right().init___O(new $c_Lme_kerfume_simql_package$QueryContext().init___sci_Vector__sci_Map__Lme_kerfume_simql_package$TranspileTarget__sci_Map(x$3$1, gscope$1, x$4$1, typeMap))
-        } else {
-          return this$30
-        }
-      } else {
-        return this$22
-      }
-    } else {
-      return this$12
-    }
+    var result = $as_T2(b);
+    var x$1 = $as_sci_Map(result.$$und1__O());
+    var x$2 = $as_sci_Map(result.$$und2__O());
+    var x$3 = analyzed.tables$1;
+    var x$4 = analyzed.target$1;
+    return new $c_s_util_Right().init___O(new $c_Lme_kerfume_simql_package$QueryContext().init___sci_Vector__sci_Map__Lme_kerfume_simql_package$TranspileTarget__sci_Map(x$3, x$1, x$4, x$2))
   } else {
-    return this$3
+    return this$6
   }
 });
 $c_Lme_kerfume_simql_Module$.prototype.parseAndResolve__p1__T__s_Option__s_Option__s_util_Either = (function(query, predef, userdef) {
@@ -7963,9 +8013,9 @@ $c_Lme_kerfume_simql_Module$.prototype.parseAndResolve__p1__T__s_Option__s_Optio
         var evidence$2$1 = $as_Lcats_MonoidK($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
         var evidence$3$1 = $as_Lcats_Applicative($m_Lcats_instances_package$list$().catsStdInstancesForList$1);
         var this$9 = new $c_Lme_kerfume_simql_functions$FoldableOps().init___O__Lcats_Foldable__Lcats_MonoidK__Lcats_Applicative(e$1, evidence$1$1, evidence$2$1, evidence$3$1).mapE__F1__s_util_Either(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, resolved$1, meta$1$1) {
-          return (function(x$2$2) {
-            var x$2 = $as_Lme_kerfume_simql_checker_QueryChecker(x$2$2);
-            return x$2.check__Lme_kerfume_simql_node_Query__Lme_kerfume_simql_package$QueryContext__s_util_Either(resolved$1, meta$1$1)
+          return (function(x$4$2) {
+            var x$4 = $as_Lme_kerfume_simql_checker_QueryChecker(x$4$2);
+            return x$4.check__Lme_kerfume_simql_node_Query__Lme_kerfume_simql_package$QueryContext__s_util_Either(resolved$1, meta$1$1)
           })
         })(this, resolved, meta)));
         if ($is_s_util_Right(this$9)) {
@@ -7986,30 +8036,45 @@ $c_Lme_kerfume_simql_Module$.prototype.parseAndResolve__p1__T__s_Option__s_Optio
   }
 });
 $c_Lme_kerfume_simql_Module$.prototype.simqlToMysql__T__s_Option__s_Option__s_util_Either = (function(query, predef, userdef) {
-  var this$1 = this.parseAndResolve__p1__T__s_Option__s_Option__s_util_Either(query, predef, userdef);
-  if ($is_s_util_Right(this$1)) {
-    var x2 = $as_s_util_Right(this$1);
+  var jsx$3 = $as_T(query.trim());
+  if (predef.isEmpty__Z()) {
+    var jsx$2 = $m_s_None$()
+  } else {
+    var arg1 = predef.get__O();
+    var x$1 = $as_T(arg1);
+    var jsx$2 = new $c_s_Some().init___O($as_T(x$1.trim()))
+  };
+  if (userdef.isEmpty__Z()) {
+    var jsx$1 = $m_s_None$()
+  } else {
+    var arg1$1 = userdef.get__O();
+    var x$2 = $as_T(arg1$1);
+    var jsx$1 = new $c_s_Some().init___O($as_T(x$2.trim()))
+  };
+  var this$4 = this.parseAndResolve__p1__T__s_Option__s_Option__s_util_Either(jsx$3, jsx$2, jsx$1);
+  if ($is_s_util_Right(this$4)) {
+    var x2 = $as_s_util_Right(this$4);
     var b = x2.value$2;
     var ast = $as_Lme_kerfume_simql_node_Query(b);
     var mysql = $m_Lme_kerfume_simql_generator_MySQLGenerator$syntax$().toSQL__Lme_kerfume_simql_node_Query__T(ast);
-    var this$3 = new $c_s_util_Right().init___O(new $c_T2().init___O__O(ast, mysql))
+    var this$6 = new $c_s_util_Right().init___O(new $c_T2().init___O__O(ast, mysql))
   } else {
-    var this$3 = this$1
+    var this$6 = this$4
   };
-  if ($is_s_util_Right(this$3)) {
-    var x2$1 = $as_s_util_Right(this$3);
+  if ($is_s_util_Right(this$6)) {
+    var x2$1 = $as_s_util_Right(this$6);
     var b$1 = x2$1.value$2;
-    var x$1 = $as_T2(b$1);
-    if ((x$1 !== null)) {
-      var mysql$1 = $as_T(x$1.$$und2__O());
-      var jsx$1 = mysql$1
+    var x$3 = $as_T2(b$1);
+    if ((x$3 !== null)) {
+      var mysql$1 = $as_T(x$3.$$und2__O());
+      var jsx$4 = mysql$1
     } else {
-      var jsx$1;
-      throw new $c_s_MatchError().init___O(x$1)
+      var jsx$4;
+      throw new $c_s_MatchError().init___O(x$3)
     };
-    return new $c_s_util_Right().init___O(jsx$1)
+    return new $c_s_util_Right().init___O(jsx$4)
   } else {
-    return this$3
+    return this$6
   }
 });
 var $d_Lme_kerfume_simql_Module$ = new $TypeData().initClass({
@@ -8078,24 +8143,32 @@ $h_Lme_kerfume_simql_Production$.prototype = $c_Lme_kerfume_simql_Production$.pr
 $c_Lme_kerfume_simql_Production$.prototype.init___ = (function() {
   return this
 });
-$c_Lme_kerfume_simql_Production$.prototype.compile__sjs_js_Function0__sjs_js_Function0__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function1__Lme_kerfume_simql_EventStreamHandler = (function(getSimqlQuery, getPredef, getUserdef, printSQL, printError, sendSQL) {
+$c_Lme_kerfume_simql_Production$.prototype.$$js$exported$meth$compile__sjs_js_Function0__sjs_js_Function0__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function1__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__O = (function(getSimqlQuery, getPredef, getUserdef, printSQL, printError, sendSQL, predefGet, predefError, predefSetComplition, userdefGet, userdefError, userdefSetComplition) {
+  return this.compile__sjs_js_Function0__sjs_js_Function0__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function1__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__Lme_kerfume_simql_EventStreamHandler(getSimqlQuery, getPredef, getUserdef, printSQL, printError, sendSQL, predefGet, predefError, predefSetComplition, userdefGet, userdefError, userdefSetComplition)
+});
+$c_Lme_kerfume_simql_Production$.prototype.compile__sjs_js_Function0__sjs_js_Function0__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function1__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__Lme_kerfume_simql_EventStreamHandler = (function(getSimqlQuery, getPredef, getUserdef, printSQL, printError, sendSQL, predefGet, predefError, predefSetComplition, userdefGet, userdefError, userdefSetComplition) {
   var presenter = new $c_Lme_kerfume_simql_Production$$anon$1().init___sjs_js_Function0__sjs_js_Function0__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1(getSimqlQuery, getPredef, getUserdef, printSQL, printError);
   var rdb = new $c_Lme_kerfume_simql_Production$$anon$2().init___sjs_js_Function1(sendSQL);
-  var app = new $c_Lme_kerfume_simql_ApplicationProd().init___Lcats_arrow_FunctionK(new $c_Lcats_arrow_FunctionK$$anon$2().init___Lcats_arrow_FunctionK__Lcats_arrow_FunctionK(presenter, rdb));
+  var predefCompiler = new $c_Lme_kerfume_simql_Production$$anon$3().init___sjs_js_Function0__sjs_js_Function1__sjs_js_Function1(predefGet, predefError, predefSetComplition);
+  var userdefCompiler = new $c_Lme_kerfume_simql_Production$$anon$4().init___sjs_js_Function0__sjs_js_Function1__sjs_js_Function1(userdefGet, userdefError, userdefSetComplition);
+  var app = new $c_Lme_kerfume_simql_ApplicationProd().init___Lcats_arrow_FunctionK__Lcats_arrow_FunctionK__Lcats_arrow_FunctionK(new $c_Lcats_arrow_FunctionK$$anon$2().init___Lcats_arrow_FunctionK__Lcats_arrow_FunctionK(presenter, rdb), predefCompiler, userdefCompiler);
   app.cancelable__Lmonix_execution_Cancelable();
   return app.handler$1
 });
-$c_Lme_kerfume_simql_Production$.prototype.$$js$exported$meth$compile__sjs_js_Function0__sjs_js_Function0__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function1__O = (function(getSimqlQuery, getPredef, getUserdef, printSQL, printError, sendSQL) {
-  return this.compile__sjs_js_Function0__sjs_js_Function0__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function1__Lme_kerfume_simql_EventStreamHandler(getSimqlQuery, getPredef, getUserdef, printSQL, printError, sendSQL)
-});
-$c_Lme_kerfume_simql_Production$.prototype.compile = (function(arg$1, arg$2, arg$3, arg$4, arg$5, arg$6) {
+$c_Lme_kerfume_simql_Production$.prototype.compile = (function(arg$1, arg$2, arg$3, arg$4, arg$5, arg$6, arg$7, arg$8, arg$9, arg$10, arg$11, arg$12) {
   var prep0 = arg$1;
   var prep1 = arg$2;
   var prep2 = arg$3;
   var prep3 = arg$4;
   var prep4 = arg$5;
   var prep5 = arg$6;
-  return this.$$js$exported$meth$compile__sjs_js_Function0__sjs_js_Function0__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function1__O(prep0, prep1, prep2, prep3, prep4, prep5)
+  var prep6 = arg$7;
+  var prep7 = arg$8;
+  var prep8 = arg$9;
+  var prep9 = arg$10;
+  var prep10 = arg$11;
+  var prep11 = arg$12;
+  return this.$$js$exported$meth$compile__sjs_js_Function0__sjs_js_Function0__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function1__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__sjs_js_Function0__sjs_js_Function1__sjs_js_Function1__O(prep0, prep1, prep2, prep3, prep4, prep5, prep6, prep7, prep8, prep9, prep10, prep11)
 });
 var $d_Lme_kerfume_simql_Production$ = new $TypeData().initClass({
   Lme_kerfume_simql_Production$: 0
@@ -8147,6 +8220,47 @@ function $h_Lme_kerfume_simql_Runner$() {
 $h_Lme_kerfume_simql_Runner$.prototype = $c_Lme_kerfume_simql_Runner$.prototype;
 $c_Lme_kerfume_simql_Runner$.prototype.init___ = (function() {
   return this
+});
+$c_Lme_kerfume_simql_Runner$.prototype.compile__Lcats_free_Free = (function() {
+  var value = $m_Lme_kerfume_simql_Compiler$GetDef$();
+  var this$7 = new $c_Lcats_free_Free$Suspend().init___O(value);
+  var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+    return (function(defs$2) {
+      var defs = $as_T(defs$2);
+      var jsx$1 = $m_Lme_kerfume_simql_DefinitionModule$();
+      var array = [defs];
+      var x1 = jsx$1.compile__sc_Seq__s_util_Either(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array));
+      matchEnd7: {
+        var jsx$2;
+        if ($is_s_util_Right(x1)) {
+          var x2 = $as_s_util_Right(x1);
+          var p3 = $as_T2(x2.value$2);
+          if ((p3 !== null)) {
+            var typeMap = $as_sci_Map(p3.$$und2__O());
+            var jsx$3 = $m_Lme_kerfume_simql_Compiler$Helper$();
+            var this$5 = new $c_sci_MapLike$ImmutableDefaultKeySet().init___sci_MapLike(typeMap);
+            var this$6 = $m_sci_List$();
+            var cbf = this$6.ReusableCBFInstance$2;
+            var jsx$2 = jsx$3.setCompletion__sci_List__Lcats_free_Free($as_sci_List($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this$5, cbf)));
+            break matchEnd7
+          }
+        };
+        if ($is_s_util_Left(x1)) {
+          var x5 = $as_s_util_Left(x1);
+          var error = $as_Lme_kerfume_simql_package$SIMQLError(x5.value$2);
+          var jsx$2 = $m_Lme_kerfume_simql_Compiler$Helper$().printError__T__Lcats_free_Free(error.toString__T());
+          break matchEnd7
+        };
+        throw new $c_s_MatchError().init___O(x1)
+      };
+      return jsx$2.map__F1__Lcats_free_Free(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
+        return (function(_$2) {
+          $asUnit(_$2)
+        })
+      })($this)))
+    })
+  })(this));
+  return new $c_Lcats_free_Free$FlatMapped().init___Lcats_free_Free__F1(this$7, f)
 });
 $c_Lme_kerfume_simql_Runner$.prototype.getOptional$1__p1__T__s_Option = (function(s) {
   if ((s === null)) {
@@ -15965,6 +16079,8 @@ $c_Lme_kerfume_fileviewer_FileViewerEntryPoint$PresenterLive$1$$anon$1.prototype
 function $c_Lme_kerfume_simql_ApplicationProd() {
   $c_O.call(this);
   this.interpreter$1 = null;
+  this.predefCompiler$1 = null;
+  this.userdefCompiler$1 = null;
   this.M$1 = null;
   this.handler$1 = null;
   this.eventStream$1 = null;
@@ -15988,8 +16104,10 @@ $c_Lme_kerfume_simql_ApplicationProd.prototype.cancelable$lzycompute__p1__Lmonix
 $c_Lme_kerfume_simql_ApplicationProd.prototype.cancelable__Lmonix_execution_Cancelable = (function() {
   return ((!this.bitmap$0$1) ? this.cancelable$lzycompute__p1__Lmonix_execution_Cancelable() : this.cancelable$1)
 });
-$c_Lme_kerfume_simql_ApplicationProd.prototype.init___Lcats_arrow_FunctionK = (function(interpreter) {
+$c_Lme_kerfume_simql_ApplicationProd.prototype.init___Lcats_arrow_FunctionK__Lcats_arrow_FunctionK__Lcats_arrow_FunctionK = (function(interpreter, predefCompiler, userdefCompiler) {
   this.interpreter$1 = interpreter;
+  this.predefCompiler$1 = predefCompiler;
+  this.userdefCompiler$1 = userdefCompiler;
   this.M$1 = $m_Lcats_package$().catsInstancesForId$1;
   this.handler$1 = null;
   $m_Lmonix_reactive_Observable$();
@@ -29654,6 +29772,104 @@ var $d_Lme_kerfume_simql_Production$$anon$2 = new $TypeData().initClass({
   Ljava_io_Serializable: 1
 });
 $c_Lme_kerfume_simql_Production$$anon$2.prototype.$classData = $d_Lme_kerfume_simql_Production$$anon$2;
+/** @constructor */
+function $c_Lme_kerfume_simql_Production$$anon$3() {
+  $c_O.call(this);
+  this.predefGet$1$1 = null;
+  this.predefError$1$1 = null;
+  this.predefSetComplition$1$1 = null
+}
+$c_Lme_kerfume_simql_Production$$anon$3.prototype = new $h_O();
+$c_Lme_kerfume_simql_Production$$anon$3.prototype.constructor = $c_Lme_kerfume_simql_Production$$anon$3;
+/** @constructor */
+function $h_Lme_kerfume_simql_Production$$anon$3() {
+  /*<skip>*/
+}
+$h_Lme_kerfume_simql_Production$$anon$3.prototype = $c_Lme_kerfume_simql_Production$$anon$3.prototype;
+$c_Lme_kerfume_simql_Production$$anon$3.prototype.init___sjs_js_Function0__sjs_js_Function1__sjs_js_Function1 = (function(predefGet$1, predefError$1, predefSetComplition$1) {
+  this.predefGet$1$1 = predefGet$1;
+  this.predefError$1$1 = predefError$1;
+  this.predefSetComplition$1$1 = predefSetComplition$1;
+  return this
+});
+$c_Lme_kerfume_simql_Production$$anon$3.prototype.apply__O__O = (function(fa) {
+  return this.apply__Lme_kerfume_simql_Compiler$Op__O($as_Lme_kerfume_simql_Compiler$Op(fa))
+});
+$c_Lme_kerfume_simql_Production$$anon$3.prototype.apply__Lme_kerfume_simql_Compiler$Op__O = (function(op) {
+  var x = $m_Lme_kerfume_simql_Compiler$GetDef$();
+  if ((x === op)) {
+    return (0, this.predefGet$1$1)()
+  } else if ($is_Lme_kerfume_simql_Compiler$PrintError(op)) {
+    var x2 = $as_Lme_kerfume_simql_Compiler$PrintError(op);
+    var error = x2.error$1;
+    return (0, this.predefError$1$1)(error)
+  } else if ($is_Lme_kerfume_simql_Compiler$SetCompletion(op)) {
+    var x3 = $as_Lme_kerfume_simql_Compiler$SetCompletion(op);
+    var funcNames = x3.xs$1;
+    return (0, this.predefSetComplition$1$1)($m_sjs_js_JSConverters$JSRichGenTraversableOnce$().toJSArray$extension__sc_GenTraversableOnce__sjs_js_Array(funcNames))
+  } else {
+    throw new $c_s_MatchError().init___O(op)
+  }
+});
+var $d_Lme_kerfume_simql_Production$$anon$3 = new $TypeData().initClass({
+  Lme_kerfume_simql_Production$$anon$3: 0
+}, false, "me.kerfume.simql.Production$$anon$3", {
+  Lme_kerfume_simql_Production$$anon$3: 1,
+  O: 1,
+  Lcats_arrow_FunctionK: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lme_kerfume_simql_Production$$anon$3.prototype.$classData = $d_Lme_kerfume_simql_Production$$anon$3;
+/** @constructor */
+function $c_Lme_kerfume_simql_Production$$anon$4() {
+  $c_O.call(this);
+  this.userdefGet$1$1 = null;
+  this.userdefError$1$1 = null;
+  this.userdefSetComplition$1$1 = null
+}
+$c_Lme_kerfume_simql_Production$$anon$4.prototype = new $h_O();
+$c_Lme_kerfume_simql_Production$$anon$4.prototype.constructor = $c_Lme_kerfume_simql_Production$$anon$4;
+/** @constructor */
+function $h_Lme_kerfume_simql_Production$$anon$4() {
+  /*<skip>*/
+}
+$h_Lme_kerfume_simql_Production$$anon$4.prototype = $c_Lme_kerfume_simql_Production$$anon$4.prototype;
+$c_Lme_kerfume_simql_Production$$anon$4.prototype.init___sjs_js_Function0__sjs_js_Function1__sjs_js_Function1 = (function(userdefGet$1, userdefError$1, userdefSetComplition$1) {
+  this.userdefGet$1$1 = userdefGet$1;
+  this.userdefError$1$1 = userdefError$1;
+  this.userdefSetComplition$1$1 = userdefSetComplition$1;
+  return this
+});
+$c_Lme_kerfume_simql_Production$$anon$4.prototype.apply__O__O = (function(fa) {
+  return this.apply__Lme_kerfume_simql_Compiler$Op__O($as_Lme_kerfume_simql_Compiler$Op(fa))
+});
+$c_Lme_kerfume_simql_Production$$anon$4.prototype.apply__Lme_kerfume_simql_Compiler$Op__O = (function(op) {
+  var x = $m_Lme_kerfume_simql_Compiler$GetDef$();
+  if ((x === op)) {
+    return (0, this.userdefGet$1$1)()
+  } else if ($is_Lme_kerfume_simql_Compiler$PrintError(op)) {
+    var x2 = $as_Lme_kerfume_simql_Compiler$PrintError(op);
+    var error = x2.error$1;
+    return (0, this.userdefError$1$1)(error)
+  } else if ($is_Lme_kerfume_simql_Compiler$SetCompletion(op)) {
+    var x3 = $as_Lme_kerfume_simql_Compiler$SetCompletion(op);
+    var funcNames = x3.xs$1;
+    return (0, this.userdefSetComplition$1$1)($m_sjs_js_JSConverters$JSRichGenTraversableOnce$().toJSArray$extension__sc_GenTraversableOnce__sjs_js_Array(funcNames))
+  } else {
+    throw new $c_s_MatchError().init___O(op)
+  }
+});
+var $d_Lme_kerfume_simql_Production$$anon$4 = new $TypeData().initClass({
+  Lme_kerfume_simql_Production$$anon$4: 0
+}, false, "me.kerfume.simql.Production$$anon$4", {
+  Lme_kerfume_simql_Production$$anon$4: 1,
+  O: 1,
+  Lcats_arrow_FunctionK: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lme_kerfume_simql_Production$$anon$4.prototype.$classData = $d_Lme_kerfume_simql_Production$$anon$4;
 function $is_Lme_kerfume_simql_node_Atomic(obj) {
   return (!(!((obj && obj.$classData) && obj.$classData.ancestors.Lme_kerfume_simql_node_Atomic)))
 }
@@ -41757,6 +41973,57 @@ var $d_Lme_kerfume_fileviewer_Order = new $TypeData().initClass({
 });
 $c_Lme_kerfume_fileviewer_Order.prototype.$classData = $d_Lme_kerfume_fileviewer_Order;
 /** @constructor */
+function $c_Lme_kerfume_simql_Application$PreDefCompile$() {
+  $c_O.call(this)
+}
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype = new $h_O();
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype.constructor = $c_Lme_kerfume_simql_Application$PreDefCompile$;
+/** @constructor */
+function $h_Lme_kerfume_simql_Application$PreDefCompile$() {
+  /*<skip>*/
+}
+$h_Lme_kerfume_simql_Application$PreDefCompile$.prototype = $c_Lme_kerfume_simql_Application$PreDefCompile$.prototype;
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype.init___ = (function() {
+  return this
+});
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype.productPrefix__T = (function() {
+  return "PreDefCompile"
+});
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype.productArity__I = (function() {
+  return 0
+});
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype.productElement__I__O = (function(x$1) {
+  throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+});
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype.toString__T = (function() {
+  return "PreDefCompile"
+});
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype.hashCode__I = (function() {
+  return 375512401
+});
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+});
+var $d_Lme_kerfume_simql_Application$PreDefCompile$ = new $TypeData().initClass({
+  Lme_kerfume_simql_Application$PreDefCompile$: 0
+}, false, "me.kerfume.simql.Application$PreDefCompile$", {
+  Lme_kerfume_simql_Application$PreDefCompile$: 1,
+  O: 1,
+  Lme_kerfume_simql_Application$Event: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lme_kerfume_simql_Application$PreDefCompile$.prototype.$classData = $d_Lme_kerfume_simql_Application$PreDefCompile$;
+var $n_Lme_kerfume_simql_Application$PreDefCompile$ = (void 0);
+function $m_Lme_kerfume_simql_Application$PreDefCompile$() {
+  if ((!$n_Lme_kerfume_simql_Application$PreDefCompile$)) {
+    $n_Lme_kerfume_simql_Application$PreDefCompile$ = new $c_Lme_kerfume_simql_Application$PreDefCompile$().init___()
+  };
+  return $n_Lme_kerfume_simql_Application$PreDefCompile$
+}
+/** @constructor */
 function $c_Lme_kerfume_simql_Application$Submit$() {
   $c_O.call(this)
 }
@@ -41807,6 +42074,264 @@ function $m_Lme_kerfume_simql_Application$Submit$() {
   };
   return $n_Lme_kerfume_simql_Application$Submit$
 }
+/** @constructor */
+function $c_Lme_kerfume_simql_Application$UserDefCompile$() {
+  $c_O.call(this)
+}
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype = new $h_O();
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype.constructor = $c_Lme_kerfume_simql_Application$UserDefCompile$;
+/** @constructor */
+function $h_Lme_kerfume_simql_Application$UserDefCompile$() {
+  /*<skip>*/
+}
+$h_Lme_kerfume_simql_Application$UserDefCompile$.prototype = $c_Lme_kerfume_simql_Application$UserDefCompile$.prototype;
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype.init___ = (function() {
+  return this
+});
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype.productPrefix__T = (function() {
+  return "UserDefCompile"
+});
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype.productArity__I = (function() {
+  return 0
+});
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype.productElement__I__O = (function(x$1) {
+  throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+});
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype.toString__T = (function() {
+  return "UserDefCompile"
+});
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype.hashCode__I = (function() {
+  return (-595107655)
+});
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+});
+var $d_Lme_kerfume_simql_Application$UserDefCompile$ = new $TypeData().initClass({
+  Lme_kerfume_simql_Application$UserDefCompile$: 0
+}, false, "me.kerfume.simql.Application$UserDefCompile$", {
+  Lme_kerfume_simql_Application$UserDefCompile$: 1,
+  O: 1,
+  Lme_kerfume_simql_Application$Event: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lme_kerfume_simql_Application$UserDefCompile$.prototype.$classData = $d_Lme_kerfume_simql_Application$UserDefCompile$;
+var $n_Lme_kerfume_simql_Application$UserDefCompile$ = (void 0);
+function $m_Lme_kerfume_simql_Application$UserDefCompile$() {
+  if ((!$n_Lme_kerfume_simql_Application$UserDefCompile$)) {
+    $n_Lme_kerfume_simql_Application$UserDefCompile$ = new $c_Lme_kerfume_simql_Application$UserDefCompile$().init___()
+  };
+  return $n_Lme_kerfume_simql_Application$UserDefCompile$
+}
+/** @constructor */
+function $c_Lme_kerfume_simql_Compiler$GetDef$() {
+  $c_O.call(this)
+}
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype = new $h_O();
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype.constructor = $c_Lme_kerfume_simql_Compiler$GetDef$;
+/** @constructor */
+function $h_Lme_kerfume_simql_Compiler$GetDef$() {
+  /*<skip>*/
+}
+$h_Lme_kerfume_simql_Compiler$GetDef$.prototype = $c_Lme_kerfume_simql_Compiler$GetDef$.prototype;
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype.init___ = (function() {
+  return this
+});
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype.productPrefix__T = (function() {
+  return "GetDef"
+});
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype.productArity__I = (function() {
+  return 0
+});
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype.productElement__I__O = (function(x$1) {
+  throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+});
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype.toString__T = (function() {
+  return "GetDef"
+});
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype.hashCode__I = (function() {
+  return 2129469679
+});
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+});
+var $d_Lme_kerfume_simql_Compiler$GetDef$ = new $TypeData().initClass({
+  Lme_kerfume_simql_Compiler$GetDef$: 0
+}, false, "me.kerfume.simql.Compiler$GetDef$", {
+  Lme_kerfume_simql_Compiler$GetDef$: 1,
+  O: 1,
+  Lme_kerfume_simql_Compiler$Op: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lme_kerfume_simql_Compiler$GetDef$.prototype.$classData = $d_Lme_kerfume_simql_Compiler$GetDef$;
+var $n_Lme_kerfume_simql_Compiler$GetDef$ = (void 0);
+function $m_Lme_kerfume_simql_Compiler$GetDef$() {
+  if ((!$n_Lme_kerfume_simql_Compiler$GetDef$)) {
+    $n_Lme_kerfume_simql_Compiler$GetDef$ = new $c_Lme_kerfume_simql_Compiler$GetDef$().init___()
+  };
+  return $n_Lme_kerfume_simql_Compiler$GetDef$
+}
+/** @constructor */
+function $c_Lme_kerfume_simql_Compiler$PrintError() {
+  $c_O.call(this);
+  this.error$1 = null
+}
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype = new $h_O();
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.constructor = $c_Lme_kerfume_simql_Compiler$PrintError;
+/** @constructor */
+function $h_Lme_kerfume_simql_Compiler$PrintError() {
+  /*<skip>*/
+}
+$h_Lme_kerfume_simql_Compiler$PrintError.prototype = $c_Lme_kerfume_simql_Compiler$PrintError.prototype;
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.productPrefix__T = (function() {
+  return "PrintError"
+});
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.productArity__I = (function() {
+  return 1
+});
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.equals__O__Z = (function(x$1) {
+  if ((this === x$1)) {
+    return true
+  } else if ($is_Lme_kerfume_simql_Compiler$PrintError(x$1)) {
+    var PrintError$1 = $as_Lme_kerfume_simql_Compiler$PrintError(x$1);
+    return (this.error$1 === PrintError$1.error$1)
+  } else {
+    return false
+  }
+});
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.productElement__I__O = (function(x$1) {
+  switch (x$1) {
+    case 0: {
+      return this.error$1;
+      break
+    }
+    default: {
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+    }
+  }
+});
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.toString__T = (function() {
+  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+});
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.init___T = (function(error) {
+  this.error$1 = error;
+  return this
+});
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.hashCode__I = (function() {
+  var this$2 = $m_s_util_hashing_MurmurHash3$();
+  return this$2.productHash__s_Product__I__I(this, (-889275714))
+});
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+});
+function $is_Lme_kerfume_simql_Compiler$PrintError(obj) {
+  return (!(!((obj && obj.$classData) && obj.$classData.ancestors.Lme_kerfume_simql_Compiler$PrintError)))
+}
+function $as_Lme_kerfume_simql_Compiler$PrintError(obj) {
+  return (($is_Lme_kerfume_simql_Compiler$PrintError(obj) || (obj === null)) ? obj : $throwClassCastException(obj, "me.kerfume.simql.Compiler$PrintError"))
+}
+function $isArrayOf_Lme_kerfume_simql_Compiler$PrintError(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lme_kerfume_simql_Compiler$PrintError)))
+}
+function $asArrayOf_Lme_kerfume_simql_Compiler$PrintError(obj, depth) {
+  return (($isArrayOf_Lme_kerfume_simql_Compiler$PrintError(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lme.kerfume.simql.Compiler$PrintError;", depth))
+}
+var $d_Lme_kerfume_simql_Compiler$PrintError = new $TypeData().initClass({
+  Lme_kerfume_simql_Compiler$PrintError: 0
+}, false, "me.kerfume.simql.Compiler$PrintError", {
+  Lme_kerfume_simql_Compiler$PrintError: 1,
+  O: 1,
+  Lme_kerfume_simql_Compiler$Op: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lme_kerfume_simql_Compiler$PrintError.prototype.$classData = $d_Lme_kerfume_simql_Compiler$PrintError;
+/** @constructor */
+function $c_Lme_kerfume_simql_Compiler$SetCompletion() {
+  $c_O.call(this);
+  this.xs$1 = null
+}
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype = new $h_O();
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.constructor = $c_Lme_kerfume_simql_Compiler$SetCompletion;
+/** @constructor */
+function $h_Lme_kerfume_simql_Compiler$SetCompletion() {
+  /*<skip>*/
+}
+$h_Lme_kerfume_simql_Compiler$SetCompletion.prototype = $c_Lme_kerfume_simql_Compiler$SetCompletion.prototype;
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.productPrefix__T = (function() {
+  return "SetCompletion"
+});
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.productArity__I = (function() {
+  return 1
+});
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.equals__O__Z = (function(x$1) {
+  if ((this === x$1)) {
+    return true
+  } else if ($is_Lme_kerfume_simql_Compiler$SetCompletion(x$1)) {
+    var SetCompletion$1 = $as_Lme_kerfume_simql_Compiler$SetCompletion(x$1);
+    var x = this.xs$1;
+    var x$2 = SetCompletion$1.xs$1;
+    return ((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))
+  } else {
+    return false
+  }
+});
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.productElement__I__O = (function(x$1) {
+  switch (x$1) {
+    case 0: {
+      return this.xs$1;
+      break
+    }
+    default: {
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+    }
+  }
+});
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.toString__T = (function() {
+  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+});
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.init___sci_List = (function(xs) {
+  this.xs$1 = xs;
+  return this
+});
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.hashCode__I = (function() {
+  var this$2 = $m_s_util_hashing_MurmurHash3$();
+  return this$2.productHash__s_Product__I__I(this, (-889275714))
+});
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+});
+function $is_Lme_kerfume_simql_Compiler$SetCompletion(obj) {
+  return (!(!((obj && obj.$classData) && obj.$classData.ancestors.Lme_kerfume_simql_Compiler$SetCompletion)))
+}
+function $as_Lme_kerfume_simql_Compiler$SetCompletion(obj) {
+  return (($is_Lme_kerfume_simql_Compiler$SetCompletion(obj) || (obj === null)) ? obj : $throwClassCastException(obj, "me.kerfume.simql.Compiler$SetCompletion"))
+}
+function $isArrayOf_Lme_kerfume_simql_Compiler$SetCompletion(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lme_kerfume_simql_Compiler$SetCompletion)))
+}
+function $asArrayOf_Lme_kerfume_simql_Compiler$SetCompletion(obj, depth) {
+  return (($isArrayOf_Lme_kerfume_simql_Compiler$SetCompletion(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lme.kerfume.simql.Compiler$SetCompletion;", depth))
+}
+var $d_Lme_kerfume_simql_Compiler$SetCompletion = new $TypeData().initClass({
+  Lme_kerfume_simql_Compiler$SetCompletion: 0
+}, false, "me.kerfume.simql.Compiler$SetCompletion", {
+  Lme_kerfume_simql_Compiler$SetCompletion: 1,
+  O: 1,
+  Lme_kerfume_simql_Compiler$Op: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lme_kerfume_simql_Compiler$SetCompletion.prototype.$classData = $d_Lme_kerfume_simql_Compiler$SetCompletion;
 /** @constructor */
 function $c_Lme_kerfume_simql_Presenter$GetPredef$() {
   $c_O.call(this)
@@ -57161,16 +57686,16 @@ $c_sc_AbstractTraversable.prototype.tail__O = (function() {
 $c_sc_AbstractTraversable.prototype.addString__scm_StringBuilder__T__T__T__scm_StringBuilder = (function(b, start, sep, end) {
   return $f_sc_TraversableOnce__addString__scm_StringBuilder__T__T__T__scm_StringBuilder(this, b, start, sep, end)
 });
+$c_sc_AbstractTraversable.prototype.toSet__sci_Set = (function() {
+  var this$1 = $m_sci_Set$();
+  var cbf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$1);
+  return $as_sci_Set($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this, cbf))
+});
 $c_sc_AbstractTraversable.prototype.repr__O = (function() {
   return this
 });
 $c_sc_AbstractTraversable.prototype.$$div$colon__O__F2__O = (function(z, op) {
   return this.foldLeft__O__F2__O(z, op)
-});
-$c_sc_AbstractTraversable.prototype.toSet__sci_Set = (function() {
-  var this$1 = $m_sci_Set$();
-  var cbf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$1);
-  return $as_sci_Set($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this, cbf))
 });
 $c_sc_AbstractTraversable.prototype.isTraversableAgain__Z = (function() {
   return true
@@ -57913,9 +58438,6 @@ function $f_sc_MapLike__toBuffer__scm_Buffer($thiz) {
 function $f_sc_MapLike__$default__O__O($thiz, key) {
   throw new $c_ju_NoSuchElementException().init___T(("key not found: " + key))
 }
-function $f_sc_MapLike__contains__O__Z($thiz, key) {
-  return $thiz.get__O__s_Option(key).isDefined__Z()
-}
 function $f_sc_MapLike__addString__scm_StringBuilder__T__T__T__scm_StringBuilder($thiz, b, start, sep, end) {
   var this$2 = $thiz.iterator__sc_Iterator();
   var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
@@ -57932,6 +58454,9 @@ function $f_sc_MapLike__addString__scm_StringBuilder__T__T__T__scm_StringBuilder
   })($thiz));
   var this$3 = new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$2, f);
   return $f_sc_TraversableOnce__addString__scm_StringBuilder__T__T__T__scm_StringBuilder(this$3, b, start, sep, end)
+}
+function $f_sc_MapLike__contains__O__Z($thiz, key) {
+  return $thiz.get__O__s_Option(key).isDefined__Z()
 }
 function $f_sc_MapLike__applyOrElse__O__F1__O($thiz, x, $default) {
   return $thiz.getOrElse__O__F0__O(x, new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this, x$1, $default$1) {
@@ -58901,11 +59426,11 @@ $h_sc_AbstractMap.prototype = $c_sc_AbstractMap.prototype;
 $c_sc_AbstractMap.prototype.apply__O__O = (function(key) {
   return $f_sc_MapLike__apply__O__O(this, key)
 });
-$c_sc_AbstractMap.prototype.runWith__F1__F1 = (function(action) {
-  return $f_s_PartialFunction__runWith__F1__F1(this, action)
-});
 $c_sc_AbstractMap.prototype.isEmpty__Z = (function() {
   return $f_sc_MapLike__isEmpty__Z(this)
+});
+$c_sc_AbstractMap.prototype.runWith__F1__F1 = (function(action) {
+  return $f_s_PartialFunction__runWith__F1__F1(this, action)
 });
 $c_sc_AbstractMap.prototype.equals__O__Z = (function(that) {
   return $f_sc_GenMapLike__equals__O__Z(this, that)
@@ -58931,13 +59456,13 @@ $c_sc_AbstractMap.prototype.addString__scm_StringBuilder__T__T__T__scm_StringBui
 $c_sc_AbstractMap.prototype.isDefinedAt__O__Z = (function(key) {
   return this.contains__O__Z(key)
 });
+$c_sc_AbstractMap.prototype.applyOrElse__O__F1__O = (function(x, $default) {
+  return $f_sc_MapLike__applyOrElse__O__F1__O(this, x, $default)
+});
 $c_sc_AbstractMap.prototype.hashCode__I = (function() {
   var this$1 = $m_s_util_hashing_MurmurHash3$();
   var xs = this.seq__sc_Map();
   return this$1.unorderedHash__sc_TraversableOnce__I__I(xs, this$1.mapSeed$2)
-});
-$c_sc_AbstractMap.prototype.applyOrElse__O__F1__O = (function(x, $default) {
-  return $f_sc_MapLike__applyOrElse__O__F1__O(this, x, $default)
 });
 $c_sc_AbstractMap.prototype.andThen__F1__F1 = (function(g) {
   return new $c_s_PartialFunction$AndThen().init___s_PartialFunction__F1(this, g)
@@ -58945,11 +59470,11 @@ $c_sc_AbstractMap.prototype.andThen__F1__F1 = (function(g) {
 $c_sc_AbstractMap.prototype.lift__F1 = (function() {
   return new $c_s_PartialFunction$Lifted().init___s_PartialFunction(this)
 });
-$c_sc_AbstractMap.prototype.stringPrefix__T = (function() {
-  return "Map"
-});
 $c_sc_AbstractMap.prototype.newBuilder__scm_Builder = (function() {
   return new $c_scm_MapBuilder().init___sc_GenMap(this.empty__sc_Map())
+});
+$c_sc_AbstractMap.prototype.stringPrefix__T = (function() {
+  return "Map"
 });
 /** @constructor */
 function $c_sc_AbstractSet() {
@@ -59130,6 +59655,10 @@ function $h_sc_MapLike$DefaultKeySet() {
   /*<skip>*/
 }
 $h_sc_MapLike$DefaultKeySet.prototype = $c_sc_MapLike$DefaultKeySet.prototype;
+$c_sc_MapLike$DefaultKeySet.prototype.foreach__F1__V = (function(f) {
+  var this$1 = this.$$outer$4.keysIterator__sc_Iterator();
+  $f_sc_Iterator__foreach__F1__V(this$1, f)
+});
 $c_sc_MapLike$DefaultKeySet.prototype.size__I = (function() {
   return this.$$outer$4.size__I()
 });
@@ -59887,11 +60416,11 @@ $h_sci_HashSet.prototype = $c_sci_HashSet.prototype;
 $c_sci_HashSet.prototype.updated0__O__I__I__sci_HashSet = (function(key, hash, level) {
   return new $c_sci_HashSet$HashSet1().init___O__I(key, hash)
 });
-$c_sci_HashSet.prototype.computeHash__O__I = (function(key) {
-  return this.improve__I__I($m_sr_Statics$().anyHash__O__I(key))
-});
 $c_sci_HashSet.prototype.seq__sc_TraversableOnce = (function() {
   return this
+});
+$c_sci_HashSet.prototype.computeHash__O__I = (function(key) {
+  return this.improve__I__I($m_sr_Statics$().anyHash__O__I(key))
 });
 $c_sci_HashSet.prototype.init___ = (function() {
   return this
@@ -59977,14 +60506,14 @@ $c_sci_HashSet.prototype.toSet__sci_Set = (function() {
 $c_sci_HashSet.prototype.filter0__F1__Z__I__Asci_HashSet__I__sci_HashSet = (function(p, negate, level, buffer, offset0) {
   return null
 });
-$c_sci_HashSet.prototype.$$plus__O__sc_Set = (function(elem) {
-  return this.$$plus__O__sci_HashSet(elem)
+$c_sci_HashSet.prototype.get0__O__I__I__Z = (function(key, hash, level) {
+  return false
 });
 $c_sci_HashSet.prototype.intersect__sc_GenSet__O = (function(that) {
   return this.intersect__sc_GenSet__sci_HashSet(that)
 });
-$c_sci_HashSet.prototype.get0__O__I__I__Z = (function(key, hash, level) {
-  return false
+$c_sci_HashSet.prototype.$$plus__O__sc_Set = (function(elem) {
+  return this.$$plus__O__sci_HashSet(elem)
 });
 $c_sci_HashSet.prototype.subsetOf0__sci_HashSet__I__Z = (function(that, level) {
   return true
@@ -60209,6 +60738,87 @@ var $d_sci_ListSet$Node = new $TypeData().initClass({
   Ljava_io_Serializable: 1
 });
 $c_sci_ListSet$Node.prototype.$classData = $d_sci_ListSet$Node;
+/** @constructor */
+function $c_sci_MapLike$ImmutableDefaultKeySet() {
+  $c_sc_MapLike$DefaultKeySet.call(this)
+}
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype = new $h_sc_MapLike$DefaultKeySet();
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.constructor = $c_sci_MapLike$ImmutableDefaultKeySet;
+/** @constructor */
+function $h_sci_MapLike$ImmutableDefaultKeySet() {
+  /*<skip>*/
+}
+$h_sci_MapLike$ImmutableDefaultKeySet.prototype = $c_sci_MapLike$ImmutableDefaultKeySet.prototype;
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.seq__sc_TraversableOnce = (function() {
+  return this
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.apply__O__O = (function(v1) {
+  return this.$$outer$4.contains__O__Z(v1)
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.thisCollection__sc_Traversable = (function() {
+  return this
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.companion__scg_GenericCompanion = (function() {
+  return $m_sci_Set$()
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.init___sci_MapLike = (function($$outer) {
+  $c_sc_MapLike$DefaultKeySet.prototype.init___sc_MapLike.call(this, $$outer);
+  return this
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.empty__sc_Set = (function() {
+  return $m_sci_Set$EmptySet$()
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.seq__sc_Set = (function() {
+  return this
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.$$plus__O__sci_Set = (function(elem) {
+  return (this.$$outer$4.contains__O__Z(elem) ? this : $as_sci_Set($as_sc_SetLike($m_sci_Set$().apply__sc_Seq__sc_GenTraversable($m_sci_Nil$())).$$plus$plus__sc_GenTraversableOnce__sc_Set(this).$$plus__O__sc_Set(elem)))
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.toSet__sci_Set = (function() {
+  return this
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.$$plus__O__sc_Set = (function(elem) {
+  return this.$$plus__O__sci_Set(elem)
+});
+var $d_sci_MapLike$ImmutableDefaultKeySet = new $TypeData().initClass({
+  sci_MapLike$ImmutableDefaultKeySet: 0
+}, false, "scala.collection.immutable.MapLike$ImmutableDefaultKeySet", {
+  sci_MapLike$ImmutableDefaultKeySet: 1,
+  sc_MapLike$DefaultKeySet: 1,
+  sc_AbstractSet: 1,
+  sc_AbstractIterable: 1,
+  sc_AbstractTraversable: 1,
+  O: 1,
+  sc_Traversable: 1,
+  sc_TraversableLike: 1,
+  scg_HasNewBuilder: 1,
+  scg_FilterMonadic: 1,
+  sc_TraversableOnce: 1,
+  sc_GenTraversableOnce: 1,
+  sc_GenTraversableLike: 1,
+  sc_Parallelizable: 1,
+  sc_GenTraversable: 1,
+  scg_GenericTraversableTemplate: 1,
+  sc_Iterable: 1,
+  sc_GenIterable: 1,
+  sc_GenIterableLike: 1,
+  sc_IterableLike: 1,
+  s_Equals: 1,
+  sc_Set: 1,
+  F1: 1,
+  sc_GenSet: 1,
+  sc_GenSetLike: 1,
+  scg_GenericSetTemplate: 1,
+  sc_SetLike: 1,
+  scg_Subtractable: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1,
+  sci_Set: 1,
+  sci_Iterable: 1,
+  sci_Traversable: 1,
+  s_Immutable: 1
+});
+$c_sci_MapLike$ImmutableDefaultKeySet.prototype.$classData = $d_sci_MapLike$ImmutableDefaultKeySet;
 /** @constructor */
 function $c_scm_AbstractSeq() {
   $c_sc_AbstractSeq.call(this)

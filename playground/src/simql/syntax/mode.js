@@ -7,9 +7,12 @@ class CompletionHelper {
   constructor() {
     this.items = [];
   }
+  setItems(xs) {
+    this.items = xs
+  }
 }
 
-export const aceCompletionHelper = new CompletionHelper()
+export const simqlCompletionHelper = new CompletionHelper()
 
 ace.define('ace/mode/simql', ['require', 'exports', 'module', 'ace/lib/oop', 'ace/mode/text', 'ace/mode/simql_highlight_rules'],
            function(acequire, exports, module) {
@@ -23,7 +26,7 @@ ace.define('ace/mode/simql', ['require', 'exports', 'module', 'ace/lib/oop', 'ac
                getCompletions: function(editor, session, pos, prefix, callback) {
                  callback(
                    null,
-                   aceCompletionHelper.items.filter(entry=>{
+                   simqlCompletionHelper.items.filter(entry=>{
                      return entry.includes(prefix);
                    }).map(entry=>{
                      return {
@@ -51,14 +54,9 @@ ace.define('ace/mode/simql', ['require', 'exports', 'module', 'ace/lib/oop', 'ac
              exports.Mode = Mode;
            });
 
-ace.define('ace/mode/fimql', ['require', 'exports', 'module', 'ace/lib/oop', 'ace/mode/text', 'ace/mode/fimql_highlight_rules'],
-           function(acequire, exports, module) {
-             let oop = acequire('../lib/oop');
-             let TextMode = acequire('../mode/text').Mode;
-             let FimqlHighlightRules = acequire('./fimql_highlight_rules').FimqlHighlightRules;
-             // complition
-             var langTools = acequire('ace/ext/language_tools');
-             const keywords = [
+class FimqlCompletionHelper {
+  constructor() {
+    this.keywords = [
                "definition",
                "defun",
                "let",
@@ -70,14 +68,30 @@ ace.define('ace/mode/fimql', ['require', 'exports', 'module', 'ace/lib/oop', 'ac
                "Raw",
                "List",
                "true",
-               "false"
+               "false",
+               "nil"
              ]
+    this.items = this.keywords;
+  }
+  setItems(xs) {
+    this.items = this.keywords.concat(xs)
+  }
+}
+export const fimqlCompletionHelper = new FimqlCompletionHelper()
+
+ace.define('ace/mode/fimql', ['require', 'exports', 'module', 'ace/lib/oop', 'ace/mode/text', 'ace/mode/fimql_highlight_rules'],
+           function(acequire, exports, module) {
+             let oop = acequire('../lib/oop');
+             let TextMode = acequire('../mode/text').Mode;
+             let FimqlHighlightRules = acequire('./fimql_highlight_rules').FimqlHighlightRules;
+             // complition
+             var langTools = acequire('ace/ext/language_tools');
              var myCompleter = {
                identifierRegexps: [/[^\s]+/],
                getCompletions: function(editor, session, pos, prefix, callback) {
                  callback(
                    null,
-                   keywords.filter(entry=>{
+                   fimqlCompletionHelper.items.filter(entry=>{
                      return entry.includes(prefix);
                    }).map(entry=>{
                      return {

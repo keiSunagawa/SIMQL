@@ -38,6 +38,7 @@ ace.define('ace/mode/simql_highlight_rules', ['require', 'exports', 'module', 'a
           regex: '\\s+'
         },
         { token: 'variable', regex: '\\$[a-zA-Z][a-zA-Z0-9_\.]*' },
+        { token: 'default-token', regex: '[a-zA-Z][a-zA-Z0-9_\.]*' },
         { token: 'literal.number', regex: '-?(\\d+(\\.\\d*)?|\\d*\\.\\d+)'},
         { token: 'literal.boolean', regex: 'true|false'}
       ],
@@ -71,7 +72,7 @@ ace.define('ace/mode/fimql_highlight_rules', ['require', 'exports', 'module', 'a
       };
     }
 
-    const tpe = 'Number|String|Symbol|Boolean|Expr|Raw|List|=>'
+    const tpe = 'Number|String|Symbol|Boolean|Expr|Raw|List|([A-Z]+)|=>'
 
     this.$rules = {
       'start': [
@@ -91,6 +92,7 @@ ace.define('ace/mode/fimql_highlight_rules', ['require', 'exports', 'module', 'a
           { token: 'generics.end', regex: '\\}', next: 'start'}
         ] },
         { token: 'variable', regex: '\\$[a-zA-Z][a-zA-Z0-9_\.]*' },
+        { token: 'default-token', regex: '[a-zA-Z][a-zA-Z0-9_\.]*' },
         { token: 'literal.number', regex: '-?(\\d+(\\.\\d*)?|\\d*\\.\\d+)'},
         { token: 'literal.boolean', regex: 'true|false'},
         {

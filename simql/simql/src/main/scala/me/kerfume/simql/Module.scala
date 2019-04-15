@@ -13,9 +13,13 @@ import me.kerfume.simql.checker._
 object Module {
   private[this] val analyzer = new TableAnalyzer
 
-  def simqlToMysql(query: String, predef: Option[String] = None, userdef: Option[String] = None): Result[MySQLGenerator.Code] = {
+  def simqlToMysql(
+    query: String,
+    predef: Option[String] = None,
+    userdef: Option[String] = None
+  ): Result[MySQLGenerator.Code] = {
     for {
-      ast <- parseAndResolve(query, predef, userdef)
+      ast <- parseAndResolve(query.trim, predef.map(_.trim), userdef.map(_.trim))
       mysql = MySQLGenerator.generate(ast)
     } yield mysql
   }
@@ -34,23 +38,11 @@ object Module {
 
     val analyzed = analyzer.analyze(ast, ctx)
     for {
-      predef <- predef.map(DefinitionModule.loadPredef).getOrElse(Right(Nil))
-      userdef <- userdef.map(DefinitionModule.loadUserdef).getOrElse(Right(Nil))
-      buildin = me.kerfume.simql.defun.buildin.functions
-      gscope = buildin ++ (predef ++ userdef).map(f => f.key -> Pure(f))
-      buildinTypeMap <- buildin.toList.mapE { case (key, f) => TypeCheck[Value].check(f, Map.empty).map(key -> _) }
-                         .map(_.toMap) // FIXME
-      typeMap <- (predef ++ userdef).foldE(buildinTypeMap) {
-                  case (pm, f) =>
-                    for {
-                      _ <- GenericsChecker.check(f)
-                      tpe <- TypeCheck[SIMQLFunction].check(f, pm)
-                    } yield pm + (f.key -> tpe)
-                }
+      result <- DefinitionModule.compile((predef.toSeq ++ userdef.toSeq): _*)
     } yield
       analyzed.copy(
-        globalScope = gscope,
-        typeMap = typeMap
+        globalScope = result._1,
+        typeMap = result._2
       )
   }
 
@@ -65,6 +57,23 @@ object Module {
 }
 
 object DefinitionModule {
+  def compile(code: String*): Result[(Scope, Map[String, SIMQLType])] = {
+    val buildin = me.kerfume.simql.defun.buildin.functions
+    for {
+      buildinTypeMap <- buildin.toList.mapE { case (key, f) => TypeCheck[Value].check(f, Map.empty).map(key -> _) }
+                         .map(_.toMap) // FIXME
+      parsed <- code.toList.mapE { c =>
+                 Parser.parseDefinition(c).toRight(UnhandleError("failed parse."))
+               }.map(_.flatten)
+      typeMap <- parsed.foldE(buildinTypeMap) {
+                  case (pm, f) =>
+                    for {
+                      _ <- GenericsChecker.check(f)
+                      tpe <- TypeCheck[SIMQLFunction].check(f, pm)
+                    } yield pm + (f.key -> tpe)
+                }
+    } yield (buildin ++ parsed.map(f => f.key -> Pure(f))) -> typeMap
+  }
   def loadPredef(code: String): Result[List[UserFunction]] = {
     Parser.parseDefinition(code).toRight(UnhandleError("failed parse."))
   }

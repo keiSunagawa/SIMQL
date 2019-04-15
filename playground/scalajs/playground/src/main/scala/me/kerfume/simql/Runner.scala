@@ -23,6 +23,18 @@ object Runner {
     } yield ()
   }
 
+  import Compiler.CompilerOpF
+  def compile(): CompilerOpF[Unit] = {
+    import Compiler.Helper._
+    for {
+      defs <- getDef()
+      _ <- DefinitionModule.compile(defs) match {
+        case Right((_, typeMap)) => setCompletion(typeMap.keys.toList)
+        case Left(error) => printError(error.toString)
+      }
+    } yield ()
+  }
+
   def resultTo(sql: String)(implicit I: Presenter.Helper[SimqlApp], D: RDB.Helper[SimqlApp]): Free[SimqlApp, Unit] = {
     import I._, D._
     for {
@@ -61,5 +73,19 @@ object RDB {
   }
   object Helper {
     implicit def rdbOp[F[_]](implicit I: InjectK[Op, F]): Helper[F] = new Helper[F]
+  }
+}
+
+object Compiler {
+  sealed trait Op[A]
+  case object GetDef extends Op[String]
+  case class SetCompletion(xs: List[String]) extends Op[Unit]
+  case class PrintError(error: String) extends Op[Unit]
+
+  type CompilerOpF[A] = Free[Op, A]
+  object Helper {
+    def getDef(): CompilerOpF[String] = liftF(GetDef)
+    def setCompletion(xs: List[String]): CompilerOpF[Unit] = liftF(SetCompletion(xs))
+    def printError(error: String): CompilerOpF[Unit] = liftF(PrintError(error))
   }
 }

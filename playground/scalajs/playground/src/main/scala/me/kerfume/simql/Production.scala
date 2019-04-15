@@ -19,7 +19,15 @@ object Production {
     getUserdef: js.Function0[String],
     printSQL: js.Function1[String, Unit],
     printError: js.Function1[String, Unit],
-    sendSQL: js.Function1[String, Unit]
+    sendSQL: js.Function1[String, Unit],
+    // predef
+    predefGet: js.Function0[String],
+    predefError: js.Function1[String, Unit],
+    predefSetComplition: js.Function1[js.Array[String], Unit],
+    // userdef
+    userdefGet: js.Function0[String],
+    userdefError: js.Function1[String, Unit],
+    userdefSetComplition: js.Function1[js.Array[String], Unit],
   ): EventStreamHandler = {
     val presenter = new FunctionK[Presenter.Op, Id] {
       import Presenter._
@@ -39,7 +47,25 @@ object Production {
           sendSQL.apply(sql)
       }
     }
-    val app = new ApplicationProd(presenter or rdb)
+
+    import js.JSConverters._
+    val predefCompiler = new FunctionK[Compiler.Op, Id] {
+      import Compiler._
+      def apply[A](op: Op[A]) = op match {
+        case GetDef => predefGet.apply()
+        case PrintError(error) => predefError.apply(error)
+        case SetCompletion(funcNames) => predefSetComplition.apply(funcNames.toJSArray)
+      }
+    }
+    val userdefCompiler = new FunctionK[Compiler.Op, Id] {
+      import Compiler._
+      def apply[A](op: Op[A]) = op match {
+        case GetDef => userdefGet.apply()
+        case PrintError(error) => userdefError.apply(error)
+        case SetCompletion(funcNames) => userdefSetComplition.apply(funcNames.toJSArray)
+      }
+    }
+    val app = new ApplicationProd(presenter or rdb, predefCompiler, userdefCompiler)
     // 重要
     app.start()
     app.handler
@@ -51,9 +77,17 @@ class EventStreamHandler(
   onComplete: () => Unit,
   app: Application[Id] // u-n...
 ) {
-  @JSExport // TODO 必要かな...?
+  @JSExport
   def submit(): Unit = {
     onNext(Application.Submit)
+  }
+  @JSExport
+  def predefCompile(): Unit = {
+    onNext(Application.PreDefCompile)
+  }
+  @JSExport
+  def userdefCompile(): Unit = {
+    onNext(Application.UserDefCompile)
   }
   @JSExport
   def complete(): Unit = {
@@ -62,7 +96,11 @@ class EventStreamHandler(
   }
 }
 // TODO interpreter convert to IO Monad
-class ApplicationProd(val interpreter: Runner.SimqlApp ~> Id) extends Application[Id] {
+class ApplicationProd(
+  val interpreter: Runner.SimqlApp ~> Id,
+  val predefCompiler: Compiler.Op ~> Id,
+  val userdefCompiler: Compiler.Op ~> Id
+) extends Application[Id] {
   implicit val M: Monad[Id] = catsInstancesForId
   var handler: EventStreamHandler = null
   val eventStream = Observable.unsafeCreate[Application.Event] { s =>

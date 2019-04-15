@@ -2,20 +2,28 @@ import * as React from 'react';
 import Highlight from 'react-highlight'
 import AceEditor from 'react-ace';
 import './syntax/mode.js'
+import { simqlCompletionHelper, fimqlCompletionHelper } from './syntax/mode.js'
 import 'brace/theme/idle_fingers';
 import '../../node_modules/highlight.js/styles/agate.css';
 import * as R from 'ramda'
 
 import { SIMQL } from '../scala/playground-fastopt'
-import { Button, Form } from 'react-bootstrap';
+import { Button, Form, Alert } from 'react-bootstrap';
 
 import { ItemTable } from '../components/table'
+import { error } from 'util';
 // import 'brace/mode/json';
 
+interface Info {
+  variant: 'success' | 'danger' | 'warning',
+  msg: String
+}
 interface SimqlState {
   simqlQuery: string
+  queryInfo: Info | null
   predef: string
   userdef: string
+  userdefInfo: Info | null
   error: String
   sql: String
   header: String[]
@@ -23,14 +31,17 @@ interface SimqlState {
 }
 export class SimqlApp extends React.Component<{}, SimqlState> {
   appHandler: any
+  predefComplition: String[]
 
   constructor(props: {}) {
     super(props)
     // initialize state
     this.state = {
       simqlQuery: INITSQL,
+      queryInfo: null,
       predef: PREDEF,
       userdef: USERDEF,
+      userdefInfo: null,
       error: "",
       sql: "",
       header: [],
@@ -44,20 +55,46 @@ export class SimqlApp extends React.Component<{}, SimqlState> {
       () => this.state.userdef, // getUserdef
       (sql: String) => { // printSQL
         this.setState({ sql })
+        this.setState({ queryInfo: null })
       },
-      (error: String) => { console.log(error) }, // printError
+      (error: String) => {
+        this.setState({ queryInfo: {variant: 'danger', msg: error }})
+      }, // printError
       (sql: String) => { // sendSQL
         console.log(sql)
+      },
+      // predef
+      () => this.state.predef, // predefGet
+      (error: String) => { console.log(error) }, // predefError
+      (xs: String[]) => {
+        this.predefComplition = xs.map((x: String) => '$' + x)
+        fimqlCompletionHelper.setItems(this.predefComplition)
+      }, // predefSetComplition
+      // userdef
+      () => this.state.userdef, // userdefGet
+      (error: String) => { // userdefError
+        this.setState({ userdefInfo: {variant: 'danger', msg: error }})
+      },
+      (xs: String[]) => { // userdefSetComplition
+        const xs2 = R.uniq(this.predefComplition.concat(xs.map((x: String) => '$' + x)))
+        fimqlCompletionHelper.setItems(xs2)
+        this.setState({ userdefInfo: {variant: 'success', msg: 'success compiled.' }})
       }
     )
 
     this.handleClick = this.handleClick.bind(this)
     this.handleQureyForm = this.handleQureyForm.bind(this)
     this.handleUserdefForm = this.handleUserdefForm.bind(this)
+    this.handleUserdefCompile = this.handleUserdefCompile.bind(this)
+
+    this.appHandler.predefCompile()
   }
 
   handleClick() {
     this.appHandler.submit()
+  }
+  handleUserdefCompile() {
+    this.appHandler.userdefCompile()
   }
 
   handleQureyForm(value: string) {
@@ -84,7 +121,12 @@ export class SimqlApp extends React.Component<{}, SimqlState> {
             name="queryInput"
             editorProps={{$blockScrolling: true}}
           />
-        </Form>
+      </Form>
+      {(() => this.state.queryInfo ?
+              (<div className="sipp-contemt">
+                <Alert variant={this.state.queryInfo.variant}>{this.state.queryInfo.msg}</Alert>
+              </div>) : null
+      )()}
         <div className="sipp-contemt">
           <Button
             variant="primary"
@@ -120,7 +162,18 @@ export class SimqlApp extends React.Component<{}, SimqlState> {
           onChange={this.handleUserdefForm}
           name="userInput"
           editorProps={{$blockScrolling: true}}
-        />
+      />
+      {(() => this.state.userdefInfo ?
+              (<div className="sipp-contemt">
+                <Alert variant={this.state.userdefInfo.variant}>{this.state.userdefInfo.msg}</Alert>
+              </div>) : null
+      )()}
+      <div className="sipp-contemt">
+        <Button
+          variant="primary"
+          onClick={this.handleUserdefCompile}
+        >Compile</Button>
+      </div>
       </div>
     )
   }
@@ -171,4 +224,4 @@ const USERDEF = `define {
     $add($x, 1)
   }
 }`
-const INITSQL = `dual ?> $succ(1)`
+const INITSQL = `dual ?> 3 == $succ(2)`
