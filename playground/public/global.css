@@ -1,0 +1,25 @@
+* {
+    font-size: 12px;
+}
+body {
+    background-color: #2e363c !important;
+    color: #f0f8ff !important;
+}
+div.sipp-contemt {
+    margin: 5px;
+}
+div.sipp-header {
+    margin: 10px;
+}
+.ace_def_keyword {
+    color: #dda0dd
+}
+.ace_tpe {
+    color: #90ee90
+}
+.ace_variable {
+    color: #ff8c00
+}
+.ace_literal {
+    color: #00bfff
+}
