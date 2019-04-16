@@ -5,7 +5,7 @@ import me.kerfume.simql.node._
 import me.kerfume.simql.node.SIMQLFunction._
 
 trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser =>
-  def lowerType: Parser[SIMQLType] = "(String|Number|Boolean|Symbol|Expr|Raw)".r ^^ {
+  def atomicType: Parser[SIMQLType] = "(String|Number|Boolean|Symbol|Expr|Raw)".r ^^ {
     case "String"  => StringType
     case "Number"  => NumberType
     case "Boolean" => BooleanType
@@ -13,10 +13,10 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
     case "Raw"     => RawType
     case "Expr"    => ExprType
   }
-  def generics: Parser[Generics] = "[A-Z]*".r ^^ { Generics(_) }
+  def generics: Parser[Generics] = "[A-Z]+".r ^^ { Generics(_) }
   def listType: Parser[ListType] = "List<" ~> simqlType <~ ">" ^^ { ListType(_) }
-  def atomicType: Parser[SIMQLType] = lowerType | listType | ("(" ~> functionType <~ ")")
-  def functionType: Parser[SIMQLType] = (atomicType <~ "=>") ~ atomicType ~ rep("=>" ~> atomicType) ^^ {
+  def singleType: Parser[SIMQLType] = atomicType | listType | ("(" ~> functionType <~ ")")
+  def functionType: Parser[SIMQLType] = (singleType <~ "=>") ~ singleType ~ rep("=>" ~> singleType) ^^ {
     case f ~ t ~ nexts =>
       if (nexts.nonEmpty) {
         val last = nexts.last
@@ -27,7 +27,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
         }
       } else FunctionType(f, t)
   }
-  def simqlType: Parser[SIMQLType] = functionType | atomicType | generics
+  def simqlType: Parser[SIMQLType] = functionType | singleType | generics
 
   def functionParam: Parser[FunctionParam] = (symbol <~ ":") ~ simqlType ^^ {
     case s ~ tpe => FunctionParam(s.label, tpe)
@@ -35,7 +35,7 @@ trait DefinitionParser { self: JavaTokenParsers with CoreParser with QueryParser
 
   def nil: Parser[SIMQLList] = "nil<" ~> simqlType <~ ">" ^^ { SIMQLList(Nil, _) }
 
-  def dterm: Parser[Expr] = string | nil | number | symbol | functionCall
+  def dterm: Parser[Expr] = string | nil | number | boolean | symbol | functionCall
   def queryBlock: Parser[Expr] = "q{" ~> expr <~ "}"
   def dexpr: Parser[Expr] = queryBlock | dterm | closure
 

@@ -95,7 +95,7 @@ trait QueryParser { self: JavaTokenParsers with CoreParser =>
     OrderType(op)
   }
 
-  def from = expr ~ rep(join) ^^ {
+  def from = term ~ rep(join) ^^ {
     case table ~ joins =>
       From(table, joins)
   }
@@ -120,7 +120,7 @@ trait QueryParser { self: JavaTokenParsers with CoreParser =>
   }
 
   def functionCall: Parser[Call] =
-    """\$[a-zA-Z][a-zA-Z0-9_]*""".r ~ opt("(" ~> (opt(expr ~ rep("," ~> expr))) <~ ")") ^^ {
+    """\$[a-zA-Z][a-zA-Z0-9_]*""".r ~ opt("(" ~> (opt(expr ~ rep("," ~> expr))) <~ ")") ^^ { // FIXME args bracket inner non empty
       case s ~ as =>
         val symbol = s.tail
         val args = as.flatten.toList.flatMap { case h ~ t => h :: t }

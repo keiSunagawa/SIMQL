@@ -88,6 +88,7 @@ sealed trait SIMQLType {
   def isSameType(that: SIMQLType): Boolean = this == that || subType.contains(that)
 }
 sealed trait ElemType extends SIMQLType
+case object NullType extends ElemType
 case object StringType extends ElemType
 case object BooleanType extends ElemType
 case object SymbolType extends ElemType

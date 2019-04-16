@@ -21,11 +21,11 @@ object Production {
     printError: js.Function1[String, Unit],
     sendSQL: js.Function1[String, Unit],
     // predef
-    predefGet: js.Function0[String],
+    predefGet: js.Function0[js.Array[String]],
     predefError: js.Function1[String, Unit],
     predefSetComplition: js.Function1[js.Array[String], Unit],
     // userdef
-    userdefGet: js.Function0[String],
+    userdefGet: js.Function0[js.Array[String]],
     userdefError: js.Function1[String, Unit],
     userdefSetComplition: js.Function1[js.Array[String], Unit],
   ): EventStreamHandler = {
@@ -52,7 +52,7 @@ object Production {
     val predefCompiler = new FunctionK[Compiler.Op, Id] {
       import Compiler._
       def apply[A](op: Op[A]) = op match {
-        case GetDef => predefGet.apply()
+        case GetDef => predefGet.apply().toList
         case PrintError(error) => predefError.apply(error)
         case SetCompletion(funcNames) => predefSetComplition.apply(funcNames.toJSArray)
       }
@@ -60,7 +60,7 @@ object Production {
     val userdefCompiler = new FunctionK[Compiler.Op, Id] {
       import Compiler._
       def apply[A](op: Op[A]) = op match {
-        case GetDef => userdefGet.apply()
+        case GetDef => userdefGet.apply().toList
         case PrintError(error) => userdefError.apply(error)
         case SetCompletion(funcNames) => userdefSetComplition.apply(funcNames.toJSArray)
       }

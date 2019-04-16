@@ -16,6 +16,9 @@ object TypeCheck {
   def instance[A](f: (A, TypeMap) => Result[SIMQLType]): TypeCheck[A] = new TypeCheck[A] {
     override def check(a: A, paramMap: TypeMap): Result[SIMQLType] = f(a, paramMap)
   }
+  implicit val nullTC: TypeCheck[NullLit.type] = instance { (_, _) =>
+    Right(NumberType)
+  }
   implicit val numberTC: TypeCheck[NumberLit] = instance { (_, _) =>
     Right(NumberType)
   }
@@ -81,11 +84,11 @@ object TypeCheck {
               case f: FunctionType =>
                 val paramTree = ToTypeTree[SIMQLType].toTree(f.paramType)
                 val argTree = ToTypeTree[SIMQLType].toTree(arg)
-                val error = typeMismatch(f.paramType, arg)
+                val error = typeMismatch(arg, f.paramType)
                 for {
                   genericsMap <- probeGenerics(paramTree, argTree).toRight(error)
                   resolvedP = replaceGenerics(paramTree, genericsMap)
-                  _ <- Either.cond(resolvedP == arg, (), error)
+                  _ <- Either.cond(resolvedP.isSameType(arg), (), error)
                 } yield replaceGenerics(ToTypeTree[SIMQLType].toTree(f.returnType), genericsMap)
               case _ => Left(UnhandleError("args to many."))
             }
@@ -104,7 +107,7 @@ object TypeCheck {
         case (tpe, e) =>
           for {
             etpe <- TypeCheck[Expr].check(e, paramMap)
-            _ <- Either.cond(tpe == etpe, (), UnhandleError("list type error."))
+            _ <- Either.cond(tpe.isSameType(etpe), (), UnhandleError("list type error."))
           } yield tpe
       }
       .map(ListType)
@@ -140,7 +143,7 @@ object TypeCheck {
       case n: StringLit     => TypeCheck[StringLit].check(n, paramMap)
       case n: SymbolLit     => TypeCheck[SymbolLit].check(n, paramMap)
       case n: BooleanLit    => TypeCheck[BooleanLit].check(n, paramMap)
-      case NullLit          => throw new RuntimeException("null type can't type check.")
+      case NullLit          => TypeCheck[NullLit.type].check(NullLit, paramMap)
       case n: Call          => TypeCheck[Call].check(n, paramMap)
       case n: SIMQLList     => TypeCheck[SIMQLList].check(n, paramMap)
       case n: SIMQLFunction => TypeCheck[SIMQLFunction].check(n, paramMap)

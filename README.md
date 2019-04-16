@@ -3,97 +3,102 @@
 ## SIMQL
 simql language can transpile for SQL.
 
+[playground](https://keisunagawa.github.io/simql/)
+
 ### Features
 - apply query snippet by function call.
 - can quickly writed query on short and simple syntax keyword.
-- can pre define functions, by local file.
+- can pre define functions, from local file.
 
 ### MVP
 ```
 // you will be able to use "define block" predefined on local file.
 define {
-  defun like(col: Symbol keyword: String) => Cond {
-    let kl = "%" + keyword + "%"
-    q{ $`? LIKE(?)`($col, $kl) }
-  }
-
-  defun c(col: Symbol) => Symbol {
+  defun c(col: Expr) => Raw {
     q{ $`COUNT(?)`($col) }
   }
-
-  defun isActive() => Cond {
-    q{ status == "enable" && ($1.title != null || $1.content != null) }
+  defun like(col: Symbol, keyword: String) => Expr {
+    let lk = $cst($keyword, "%")
+    let lk = $cst("%", $lk)
+    q{ $`? LIKE(?)`($col, $lk) }
+  }
+  defun isActive(table_index: Number) => Expr {
+    q{ status == "enable" && ($table_access(title, $table_index) != null || $table_access(content, $table_index) != null) }
   }
 }
 
-users << tasks ?> id == $1.assign_user_id :> $c(id) ?> $isActive() && $like(name, "K")
+users << tasks ?> id == $1.assign_user_id :> $c(id) ?> $isActive(1) && $like(name, "K")
 
 ↓↓↓↓ transepile to ↓↓↓↓
 
-SELECT COUNT(id)
-FROM users
-LET JOIN tasks ON users.id = tasks.assign_user_id
-WHERE (
-  users.status = "enable"
-    AND (tasks.title IS NOT NULL OR tasks.content IS NOT NULL)
-  ) AND name LIKE("%K%")
+SELECT (COUNT(id))
+FROM users LEFT JOIN tasks ON (id) = (tasks.assign_user_id)
+WHERE (((status) = ('enable')) AND ((((tasks.title IS NOT NULL)) OR ((tasks.content IS NOT NULL))))) AND ((name LIKE('%K%')))
 ```
 
 ### syntax
 ```
-string ::= // string
-number ::= // decimal number
+string ::= // any character sequence in between double quote.
+number ::= // decimal number.
+boolean ::= "true" | "false"
+symbol ::= /[a-zA-Z][a-zA-Z0-9_]*/
 null ::= "null"
-symbol ::= [a-zA-Z][a-zA-Z0-9_]*
-accessor ::= "$"[0-9]
-raw = "\$`.*`" [ "(" { term } ")" ]
-macroArg ::= cond | symbolWithAccessor | string | number
-macroApply ::= "\$[a-zA-Z][a-zA-Z0-9_]*"(" [macroArg] {"," macroArg} ")"
+raw = "$`" /.*/ "`" [ "(" term { "," term } ")" ]
+column ::= [ "$" /[0-9]/ "." ] symbol
 
-symbolWithAccessor ::= [accessor"."]symbol
-tableSymbol ::= macroApply | raw | symbol
-highSymbol ::= macroApply | raw | symbolWithAccessor
-term ::= null | highSymbol | string | number | rbracket
-rbracket ::= "(" cond ")"
+rbracket ::= "(" expr ")"
+call ::= /\$[a-zA-Z][a-zA-Z0-9_]*/ [ "(" expr { "," expr } ")" ]
+
+term ::= null | boolean | string | number | column | rbracket | raw | call
 
 op0 ::= ">" | "<" | ">=" | "<=" | "==" | "!="
 op1 ::= "&&" | "||"
 
-cond0 ::= term {op0 term}
-cond ::= cond0 {op1 cond0}
+expr0 ::= term {op0 term}
+expr ::= expr0 {op1 expr0}
+
+
+symbolWithAccessor ::= [accessor"."]symbol
+tableSymbol ::= macroApply | raw | symbol
+highSymbol ::= macroApply | raw | symbolWithAccessor
 
 joinType ::= "<<" | "><"
-join ::= joinType TableSymbokl "?>" expr
+join ::= joinType term "?>" expr
 
-orderType ::= "/>" | "\>"
-
-from ::= TableSymbol {join}
-select ::= ":>" highSymbol {highSymbol}
+from ::= term { join }
+select ::= ":>" term { term }
 where ::= "?>" expr
 limitOffset ::= "@" number [- number] // TODO ignore float number
-order ::= orderType highSymbol {highSymbol}
 
-simql ::= from [select] [where] [limitOffset] [order]
+orderType ::= "/>" | "\>"
+order ::= orderType term { term }
+
+simql ::= from [ select ] [ where ] [ limitOffset ] [ order ]
 
 groupBy ::= // TODO maybe omit
 
-// define
-macroParamType ::= "String" | "Number" | "Symbol" | "Cond"
-macroParam ::= symbol ":" macroParamType
-macroReturnType ::= "Cond" | "Symbol" | "Term"
-macroFunc = "defun" symbol (" { macroParam } ")" "=>" macroReturnType "=" "{" macroFuncBody "}"
+// fimql syntax
+atomicType ::= "String" | "Number" | "Boolean" | "Symbol" | "Raw" | "Expr"
+generics ::= \[A-Z]+\
+listType ::= "List" "<" simqlType ">"
+singleType ::= atomicType | listType | "(" functionType ")"
+functionType ::= singleType "=>" singleType { "=>" singleType }
+simqlType ::= functionType | singleType | generics
 
-definition ::= macroFunc // ひとまずmacroFuncのみ
-definitionBlock ::= "define" "{" {definition} "}"
+functionParam ::= symbol ":" simqlType
 
-// macro function
-value ::= symbol | string | number
-var ::= "\$[a-zA-Z][a-zA-Z0-9_]*"
-funcArg ::= var | value
-functionCall ::= "\$[a-zA-Z][a-zA-Z0-9_]*"(" [macroArg] {"," macroArg} ")"
-expr ::= functionCall | value
-bind ::= "let" symbol "=" expr
-quasiquote ::= "q{"*"}"
-macroStatement ::= quasiquote | bind
-macroFuncBody ::= {macroStatement}
+nil ::= "nil" "<" simqLType ">"
+dterm ::= string | nil | number | boolean | symbol | call
+dexpr ::= queryBlock | dterm | function
+
+queryBlock ::= "q{" expr "}"
+function ::= [ "<" generics { "," generics } ">" ] "(" functionParam { "," functionParam } ")" "=>" simQLType "{" { bind } dexpr "}"
+
+bind ::= "let" symbol "=" dexpr
+
+
+defun = "defun" symbol function
+
+definition ::= defun
+definitionBlock ::= "define" "{" { definition } "}"
 ```

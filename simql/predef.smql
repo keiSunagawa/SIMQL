@@ -16,7 +16,7 @@ define {
   defun like(col: Symbol, keyword: String) => Expr {
     let lk = $cst($keyword, "%")
     let lk = $cst("%", $lk)
-    q{ $`? LIKE(?)`($col, $keyword) }
+    q{ $`? LIKE(?)`($col, $lk) }
   }
   defun identity<A>(a: A) => A {
     $a

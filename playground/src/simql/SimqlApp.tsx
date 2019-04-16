@@ -64,14 +64,17 @@ export class SimqlApp extends React.Component<{}, SimqlState> {
         console.log(sql)
       },
       // predef
-      () => this.state.predef, // predefGet
+      () => [this.state.predef], // predefGet
       (error: String) => { console.log(error) }, // predefError
       (xs: String[]) => {
         this.predefComplition = xs.map((x: String) => '$' + x)
         fimqlCompletionHelper.setItems(this.predefComplition)
       }, // predefSetComplition
       // userdef
-      () => this.state.userdef, // userdefGet
+      () => [
+        this.state.predef,
+        this.state.userdef
+      ], // userdefGet
       (error: String) => { // userdefError
         this.setState({ userdefInfo: {variant: 'danger', msg: error }})
       },
@@ -206,7 +209,7 @@ const PREDEF = `define {
   defun like(col: Symbol, keyword: String) => Expr {
     let lk = $cst($keyword, "%")
     let lk = $cst("%", $lk)
-    q{ $\`? LIKE(?)\`($col, $keyword) }
+    q{ $\`? LIKE(?)\`($col, $lk) }
   }
   defun identity<A>(a: A) => A {
     $a
