@@ -31,4 +31,4 @@ simql-connection.yml
 .bloop/
 
 # scalajs file
-frontend-backend-fastopt.js
+playground-fastopt.js
