@@ -1,9 +1,10 @@
 [wip]
 
 ## SIMQL
-simql language can transpile for SQL.
+simql language can transpile for SQL.  
 
-[playground](https://keisunagawa.github.io/simql/)
+[playground](https://keisunagawa.github.io/simql/)  
+[Document](https://github.com/keiSunagawa/SIMQL/wiki)  
 
 ### Features
 - apply query snippet by function call.
