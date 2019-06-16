@@ -10,7 +10,7 @@ import me.kerfume.simql.functions._
 import cats.instances.list._
 
 object buildin {
-  val functions: Scope = (calc.values ++ context.values ++ list.values ++ control.values ++ develop.values)
+  val functions: Scope = (calc.values ++ convert.values ++ context.values ++ list.values ++ control.values ++ develop.values)
     .map(f => f.key -> Pure(f))
     .toMap ++ constants.values
 
@@ -203,6 +203,28 @@ object buildin {
     }
 
     val values = List(Add, Sub, Mul, Div, ConcatString, ConcatSymbol, Eq, Not)
+  }
+
+  object convert {
+    val StringToSymbol = evalArgsFunction(
+      name = "st2sy",
+      params = "a" \> StringType :: HNil,
+      retType = SymbolType
+    ) { args: StringLit :: HNil => _ =>
+      val a :: _ = args
+      Right(SymbolLit(a.value))
+    }
+
+    val SymbolToString = evalArgsFunction(
+      name = "sy2st",
+      params = "a" \> SymbolType :: HNil,
+      retType = StringType
+    ) { args: SymbolLit :: HNil => _ =>
+      val a :: _ = args
+      Right(StringLit(a.label))
+    }
+
+    val values = List(StringToSymbol, SymbolToString)
   }
 
   object list {
