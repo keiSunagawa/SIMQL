@@ -77,7 +77,7 @@ trait ASTVisitor {
              }
     } yield
       node.copy(
-        lhs = node.lhs,
+        lhs = lhs,
         rhss = rhss
       )
   }
