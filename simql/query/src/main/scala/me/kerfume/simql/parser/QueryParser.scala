@@ -13,7 +13,7 @@ trait QueryParser { self: JavaTokenParsers with CoreParser =>
   def raw: Parser[Raw] = """\$`.*`""".r ~ opt("(" ~> term ~ rep("," ~> term) <~ ")") ^^ {
     case s ~ as =>
       val args = as.toList.flatMap { case h ~ t => h :: t }
-      val sql = s.tail.replaceAll("`", "")
+      val sql = s.tail.tail.init // $`abc` -> abc FIXME: escape code
       Raw(sql, args)
   }
 
